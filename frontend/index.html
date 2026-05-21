@@ -1,0 +1,419 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Gerenciamento de Pizzaria</title>
+<link rel="stylesheet" href="src/style.css">
+
+</head>
+<body>
+
+<div id="loginOverlay">
+  <div class="login-split">
+
+    <div class="login-panel">
+      <div class="login-panel-content">
+        <h1 class="login-panel-title" id="loginNome">Pizzaria</h1>
+        <p class="login-panel-sub">Sistema completo de gestão para sua pizzaria</p>
+        <div class="login-panel-features">
+          <div class="login-feature">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Controle de mesas em tempo real
+          </div>
+          <div class="login-feature">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Gestão de pedidos e delivery
+          </div>
+          <div class="login-feature">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            KDS para cozinha integrado
+          </div>
+          <div class="login-feature">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Relatórios financeiros do dia
+          </div>
+        </div>
+      </div>
+      <div class="login-panel-footer">Sistema de Gestão © 2026</div>
+    </div>
+
+    <div class="login-form-panel">
+      <div class="login-box">
+        <div class="login-box-header">
+          <div class="login-box-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div class="login-title">Bem-vindo</div>
+            <div class="login-sub">Entre com suas credenciais para continuar</div>
+          </div>
+        </div>
+
+        <div class="login-erro" id="loginErro"></div>
+
+        <div class="form-group">
+          <label>Usuário</label>
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input class="form-control" id="loginUser" placeholder="nome de usuário" autocomplete="username"
+                   onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Senha</label>
+          <div class="input-eye input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input class="form-control" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"
+                   onkeydown="if(event.key==='Enter')fazerLogin()">
+            <button type="button" onclick="toggleSenhaVisivel('loginPass',this)" tabindex="-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-full login-btn" id="loginBtn" onclick="fazerLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Entrar
+        </button>
+
+        <div class="login-footer">COPYRIGHT© 2026 — Sistema de Gerenciamento de Pizzaria</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="app">
+<!-- ══ SIDEBAR ════════════════════════════════════════ -->
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-logo" id="logoWrap">
+      <div class="default-logo" id="defaultLogo">P</div>
+    </div>
+    <div class="sidebar-collapsed-hide">
+      <div class="brand-name" id="brandName">Pizzaria MVP</div>
+      <div class="brand-sub">Sistema de Gestão</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" data-page="dashboard">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="sidebar-collapsed-hide">Dashboard</span>
+    </div>
+    <div class="nav-item" data-page="mesas">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+      <span class="sidebar-collapsed-hide">Mesas</span>
+    </div>
+    <div class="nav-item" data-page="pedidos">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="sidebar-collapsed-hide">Pedidos</span>
+      <span class="nav-badge" id="badgePedidos">0</span>
+    </div>
+    <div class="nav-item" data-page="kds">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <span class="sidebar-collapsed-hide">KDS Cozinha</span>
+    </div>
+    <div class="nav-section">Cadastros</div>
+    <div class="nav-item" data-page="cardapio">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2z"/><path d="M12 6v6l4 2"/></svg>
+      <span class="sidebar-collapsed-hide">Cardápio</span>
+    </div>
+    <div class="nav-item" data-page="clientes">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="sidebar-collapsed-hide">Clientes</span>
+    </div>
+    <div class="nav-section">Financeiro</div>
+    <div class="nav-item" data-page="caixa">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M12 12v4M10 14h4"/></svg>
+      <span class="sidebar-collapsed-hide">Caixa</span>
+    </div>
+    <div class="nav-section">Sistema</div>
+    <div class="nav-item" data-page="config">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span class="sidebar-collapsed-hide">Configurações</span>
+    </div>
+    <div class="nav-item" data-page="usuarios" id="navUsuarios">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="sidebar-collapsed-hide">Usuários</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="flex items-center gap-2 sidebar-collapsed-hide" id="sidebarUser"></div>
+    <div class="nav-item" id="btnSair" onclick="fazerLogout()" title="Sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      <span class="sidebar-collapsed-hide">Sair</span>
+    </div>
+    <div class="nav-item" id="toggleSidebar" title="Recolher">
+      <svg id="collapseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ════════════════════════════════════════════ -->
+<div id="main">
+  <header id="topbar">
+    <button class="btn btn-icon btn-ghost" id="mobileSidebarToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-actions">
+      <button class="btn btn-icon btn-ghost" id="themeBtn" title="Alternar tema">
+        <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <button class="btn btn-primary btn-sm" id="newPedidoBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Pedido
+      </button>
+    </div>
+  </header>
+  <div id="content"></div>
+</div>
+</div>
+
+<!-- Modal Pedido -->
+<div class="modal-overlay" id="modalPedido">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Novo Pedido</div>
+      <button class="modal-close" data-close="modalPedido">×</button>
+    </div>
+    <div class="grid-2 mb-3">
+      <div class="form-group mb-0">
+        <label>Tipo</label>
+        <select class="form-control" id="pedTipo" onchange="renderPedidoExtra()">
+          <option value="salao">Salão</option>
+          <option value="delivery">Delivery</option>
+        </select>
+      </div>
+      <div class="form-group mb-0" id="extraPedido">
+        <label>Mesa</label>
+        <select class="form-control" id="pedMesa"></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Adicionar Item</label>
+      <div class="flex gap-2">
+        <select class="form-control" id="pedItem"></select>
+        <input type="number" class="form-control" id="pedQtd" value="1" min="1">
+        <button class="btn btn-secondary" onclick="addItemPedido()">+</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observação do item</label>
+      <input type="text" class="form-control" id="pedObs" placeholder="ex: sem cebola">
+    </div>
+    <div id="pedItensList"></div>
+    <div class="total-row">
+      Total: <strong id="pedTotal">R$ 0,00</strong>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="modalPedido">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPedido()">Abrir Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Item Cardápio -->
+<div class="modal-overlay" id="modalItem">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalItemTitle">Novo Item</div>
+      <button class="modal-close" data-close="modalItem">×</button>
+    </div>
+    <div class="form-group"><label>Nome</label><input class="form-control" id="itemNome" placeholder="ex: Pizza Margherita Grande"></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Tipo</label><select class="form-control" id="itemTipo"><option value="pizza">Pizza</option><option value="bebida">Bebida</option></select></div>
+      <div class="form-group"><label>Tamanho</label><select class="form-control" id="itemTamanho"><option value="">-</option><option value="P">Pequena</option><option value="M">Média</option><option value="G">Grande</option><option value="GG">Família</option></select></div>
+    </div>
+    <div class="form-group"><label>Preço (R$)</label><input class="form-control" id="itemPreco" type="number" step="0.01" placeholder="0,00"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="modalItem">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mesa -->
+<div class="modal-overlay" id="modalMesa">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Gerenciar Mesa <span id="mesaModalNum"></span></div>
+      <button class="modal-close" data-close="modalMesa">×</button>
+    </div>
+    <div id="mesaModalBody"></div>
+  </div>
+</div>
+
+<!-- Modal Config -->
+<div class="modal-overlay" id="modalConfig">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Configurações do Sistema</div>
+      <button class="modal-close" data-close="modalConfig">×</button>
+    </div>
+    <div class="form-group"><label>Nome da Empresa</label><input class="form-control" id="cfgNome" placeholder="Nome da pizzaria"></div>
+    <div class="form-group"><label>Logo URL ou deixe em branco para iniciais</label><input class="form-control" id="cfgLogo" placeholder="https://...logo.png"></div>
+    <div class="form-group"><label>Cor principal (hex)</label><input class="form-control" id="cfgCor" type="color" value="#C8340A"></div>
+    <div class="form-group"><label>Número de mesas</label><input class="form-control" id="cfgMesas" type="number" value="10" min="1" max="50"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="modalConfig">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarConfig()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Fechar Conta -->
+<div class="modal-overlay" id="modalFechar">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Fechar Conta</div>
+      <button class="modal-close" data-close="modalFechar">×</button>
+    </div>
+    <div id="fecharBody"></div>
+    <div class="form-group" style="margin-top:4px">
+      <label style="margin-bottom:8px;display:block;font-weight:600">Método de Pagamento</label>
+      <div class="pagamento-opcoes">
+        <label class="pagamento-card">
+          <input type="radio" name="formaPag" value="Dinheiro">
+          <span class="pagamento-card-inner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><circle cx="12" cy="13" r="2"/></svg>
+            Dinheiro
+          </span>
+        </label>
+        <label class="pagamento-card">
+          <input type="radio" name="formaPag" value="Cartão de Crédito">
+          <span class="pagamento-card-inner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+            Crédito
+          </span>
+        </label>
+        <label class="pagamento-card">
+          <input type="radio" name="formaPag" value="Cartão de Débito">
+          <span class="pagamento-card-inner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/><path d="M7 15h2"/></svg>
+            Débito
+          </span>
+        </label>
+        <label class="pagamento-card">
+          <input type="radio" name="formaPag" value="PIX">
+          <span class="pagamento-card-inner">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            PIX
+          </span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="modalFechar">Cancelar</button>
+      <button class="btn btn-success" onclick="confirmarFechamento()">Confirmar Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalClienteTitle">Novo Cliente</div>
+      <button class="modal-close" data-close="modalCliente">×</button>
+    </div>
+    <div class="form-group"><label>Nome</label><input class="form-control" id="cliNome" placeholder="Nome completo"></div>
+    <div class="form-group"><label>Telefone</label><input class="form-control" id="cliTel" placeholder="(99) 99999-9999"></div>
+    <div class="form-group"><label>Endereço</label><textarea class="form-control" id="cliEnd" rows="2" placeholder="Rua, número, bairro..."></textarea></div>
+    <div class="grid-2">
+      <div class="form-group"><label>Mesa de Reserva</label><input class="form-control" id="cliMesaReserva" type="number" min="1" max="99" placeholder="Nº da mesa"></div>
+      <div class="form-group"><label>Data e Hora do Evento</label><input class="form-control" id="cliDataEvento" type="datetime-local"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="modalCliente">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Trocar Senha -->
+<div class="modal-overlay" id="modalTrocarSenha">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="trocaSenhaTitulo">Trocar Senha</div>
+    </div>
+    <div id="trocaSenhaAviso">
+      Primeiro acesso — defina uma senha pessoal para continuar.
+    </div>
+    <div class="form-group">
+      <label>Senha atual</label>
+      <div class="input-eye">
+        <input class="form-control" id="tsSenhaAtual" type="password" placeholder="••••••••">
+        <button type="button" onclick="toggleSenhaVisivel('tsSenhaAtual',this)" tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Nova senha <span class="text-muted">(mín. 6 caracteres)</span></label>
+      <div class="input-eye">
+        <input class="form-control" id="tsNovaSenha" type="password" placeholder="••••••••">
+        <button type="button" onclick="toggleSenhaVisivel('tsNovaSenha',this)" tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Confirmar nova senha</label>
+      <div class="input-eye">
+        <input class="form-control" id="tsConfirmar" type="password" placeholder="••••••••">
+        <button type="button" onclick="toggleSenhaVisivel('tsConfirmar',this)" tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="tsCancelarBtn" data-close="modalTrocarSenha">Cancelar</button>
+      <button class="btn btn-primary" onclick="trocarSenha()">Salvar senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo/Editar Usuário (admin) -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalUsuarioTitle">Novo Usuário</div>
+      <button class="modal-close" data-close="modalUsuario">×</button>
+    </div>
+    <div class="form-group"><label>Nome completo</label>
+      <input class="form-control" id="uNome" placeholder="ex: João Silva"></div>
+    <div class="form-group"><label>Usuário (login)</label>
+      <input class="form-control" id="uUsername" placeholder="ex: joao.silva"></div>
+    <div class="form-group" id="uSenhaGrupo"><label>Senha temporária <span class="text-muted">(mín. 6 caracteres)</span></label>
+      <div class="input-eye">
+        <input class="form-control" id="uSenha" type="password" placeholder="••••••••">
+        <button type="button" onclick="toggleSenhaVisivel('uSenha',this)" tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="form-group"><label>Papel</label>
+      <select class="form-control" id="uPapel">
+        <option value="garcom">Garçom</option>
+        <option value="cozinha">Cozinha</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="modalUsuario">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="dist/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "pizzaria-frontend",
+  "version": "1.0.0",
+  "description": "Frontend do Sistema de Gerenciamento de Pizzaria",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

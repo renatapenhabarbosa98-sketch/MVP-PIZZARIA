@@ -1,0 +1,27 @@
+# ── Python ──────────────────────────────────────────
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+
+# ── Django ──────────────────────────────────────────
+.env
+*.sqlite3
+backend/staticfiles/
+
+# ── Node / TypeScript ───────────────────────────────
+node_modules/
+package-lock.json
+*.map
+
+# ── IDE / Sistema ───────────────────────────────────
+.vscode/
+.idea/
+pyrightconfig.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
