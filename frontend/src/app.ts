@@ -53,9 +53,9 @@ function loadStorage(): void {
     APP.config.numMesas = APP.config.numMesas || APP.config.mesas || 10;
     APP.config.tema = APP.config.tema || (localStorage.getItem('theme') as Tema) || 'light';
     APP.config.fonteTamanho = Number(APP.config.fonteTamanho || 14);
-    if (d.cardapio)                    APP.cardapio   = d.cardapio;
-    if (d.mesas && d.mesas.length > 0) APP.mesas      = d.mesas;
-    if (d.pedidos)                     APP.pedidos    = d.pedidos;
+    if (d.cardapio)   APP.cardapio   = d.cardapio;
+    if (d.mesas)      APP.mesas      = d.mesas;
+    if (d.pedidos)    APP.pedidos    = d.pedidos;
     if (d.clientes)   APP.clientes   = d.clientes;
     if (d.pagamentos) APP.pagamentos = d.pagamentos;
     if (d.nextId)     APP.nextId     = d.nextId;
@@ -89,18 +89,8 @@ const titles: Record<string, string> = {
   kds: 'KDS – Tela da Cozinha', cardapio: 'Cardápio', clientes: 'Clientes',
   caixa: 'Caixa do Dia', config: 'Configurações', usuarios: 'Usuários do Sistema',
 };
-const paginasPorPapel: Record<string, string[]> = {
-  admin:   ['dashboard', 'mesas', 'pedidos', 'kds', 'cardapio', 'clientes', 'caixa', 'config', 'usuarios'],
-  garcom:  ['dashboard', 'mesas', 'pedidos', 'kds', 'cardapio', 'caixa'],
-  cozinha: ['dashboard', 'mesas', 'kds', 'pedidos'],
-};
 
 function navigate(page: string): void {
-  const papel = APP.auth.usuario?.papel;
-  if (papel && papel !== 'admin') {
-    const permitidas = paginasPorPapel[papel] || ['dashboard'];
-    if (!permitidas.includes(page)) return;
-  }
   APP.currentPage = page;
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', (el as HTMLElement).dataset.page === page);
@@ -218,10 +208,7 @@ function pedTotalCalc(items: ItemPedido[]): number {
 }
 function fmtDate(ts: number): string {
   if (!ts) return '-';
-  return new Date(ts).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
+  return new Date(ts).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 function escapeHtml(value: unknown): string {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -323,7 +310,7 @@ async function carregarDados(): Promise<void> {
       apiFetch('/api/pagamentos/'),
     ]);
     if (cardapioR.ok) APP.cardapio = (await cardapioR.json() as ApiCardapioItem[]).map(normalizeCardapioItem);
-    if (mesasR.ok) { const m = await mesasR.json(); if (m.length > 0) APP.mesas = m; }
+    if (mesasR.ok)    APP.mesas      = await mesasR.json();
     if (pedidosR.ok)  APP.pedidos    = await pedidosR.json();
     if (clientesR.ok) APP.clientes   = await clientesR.json();
     if (pagamentosR.ok) APP.pagamentos = await pagamentosR.json();
@@ -481,18 +468,12 @@ function openMesaModal(id: number): void {
           <span class="badge ${pedStatusBadge(p.status)}">${pedStatusLabel(p.status)}</span>
         </div>`;
       });
-      body += `</div>
-      <div class="flex gap-2" style="margin-top:8px">
-        <button class="btn btn-success" style="flex:1" onclick="abrirFecharConta(${id})">Fechar Conta</button>
-        <button class="btn btn-secondary" style="flex:1" onclick="mudarStatusMesa(${id},'livre')">Liberar Forçado</button>
-      </div>`;
-    } else {
-      body += `<div style="margin-bottom:12px;padding:12px;background:var(--amberbg);border-radius:8px">
-        <div class="font-bold text-sm" style="color:var(--amber)">Mesa sem pedido ativo</div>
-        <div class="text-muted text-sm" style="margin-top:4px">Esta mesa está marcada como ocupada mas não possui pedidos. Clique em Liberar Mesa para corrigi-la.</div>
-      </div>
-      <button class="btn btn-secondary w-full" onclick="mudarStatusMesa(${id},'livre')">Liberar Mesa</button>`;
+      body += `</div>`;
     }
+    body += `<div class="flex gap-2" style="margin-top:8px">
+      <button class="btn btn-success" style="flex:1" onclick="abrirFecharConta(${id})">Fechar Conta</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="mudarStatusMesa(${id},'livre')">Liberar Forçado</button>
+    </div>`;
   }
   (document.getElementById('mesaModalBody') as HTMLElement).innerHTML = body;
   openModal('modalMesa');
@@ -527,13 +508,8 @@ async function recarregarMesas(): Promise<void> {
   try {
     const resp = await apiFetch('/api/mesas/');
     if (resp.ok) {
-      const data = await resp.json();
-      if (data.length > 0) {
-        APP.mesas = data;
-        saveStorage();
-      } else if (APP.mesas.length === 0) {
-        initMesas();
-      }
+      APP.mesas = await resp.json();
+      saveStorage();
     }
   } catch {}
 }
@@ -577,7 +553,6 @@ function pedidos(): string {
                 <div class="flex gap-2">
                   ${p.status !== 'Finalizado' ? `<button class="btn btn-sm btn-secondary" onclick="avancarStatus(${p.id})">Avançar</button>` : ''}
                   ${p.status !== 'Finalizado' ? `<button class="btn btn-sm btn-success" onclick="abrirFecharContaPedido(${p.id})">Fechar</button>` : ''}
-                  ${p.status === 'Finalizado' ? `<button class="btn btn-sm btn-secondary" onclick="verDetalhesPedido(${p.id})">Ver itens</button>` : ''}
                 </div>
               </td>
             </tr>`).join('')}
@@ -586,44 +561,6 @@ function pedidos(): string {
   </div>`;
 }
 function setFilter(f: string): void { APP._pedFilter = f; render(); }
-
-function verDetalhesPedido(id: number): void {
-  const p = APP.pedidos.find(x => x.id === id);
-  if (!p) return;
-  const header = p.tipo === 'salao' ? `Mesa ${p.mesaNum}` : (p.clienteNome || 'Delivery');
-  const pagamento = APP.pagamentos.find(pg => pg.pedidoId === id);
-  const temObs = p.items.some(i => i.obs);
-  (document.getElementById('detalhesPedidoTitulo') as HTMLElement).textContent = `Pedido #${p.id} — Detalhes`;
-  (document.getElementById('detalhesPedidoBody') as HTMLElement).innerHTML = `
-  <div class="flex items-center justify-between mb-3">
-    <div>
-      <div class="font-bold">${header}</div>
-      <div class="text-muted text-sm">${fmtDate(p.criadoEm)}</div>
-    </div>
-    <span class="badge badge-green">Finalizado</span>
-  </div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>Item</th><th>Qtd</th><th>Unit.</th><th>Total</th>${temObs ? '<th>Obs</th>' : ''}</tr></thead>
-    <tbody>${p.items.map(i => `
-      <tr>
-        <td><strong>${escapeHtml(i.nome)}</strong></td>
-        <td>${i.qtd}</td>
-        <td>${money(i.preco)}</td>
-        <td>${money(i.preco * i.qtd)}</td>
-        ${temObs ? `<td class="text-muted text-sm">${escapeHtml(i.obs || '-')}</td>` : ''}
-      </tr>`).join('')}
-    </tbody>
-  </table></div>
-  <div class="flex items-center justify-between" style="margin-top:12px;padding-top:12px;border-top:2px solid var(--border)">
-    <strong>Total</strong>
-    <strong style="color:var(--green);font-size:18px">${money(p.total)}</strong>
-  </div>
-  ${pagamento ? `<div class="flex items-center justify-between" style="margin-top:8px">
-    <span class="text-muted text-sm">Forma de pagamento</span>
-    <span class="badge badge-blue">${escapeHtml(pagamento.forma)}</span>
-  </div>` : ''}`;
-  openModal('modalDetalhesPedido');
-}
 
 async function avancarStatus(id: number): Promise<void> {
   const p = APP.pedidos.find(x => x.id === id);
@@ -659,17 +596,12 @@ function kds(): string {
         const mins = Math.floor((Date.now() - p.criadoEm) / 60000);
         const timerClass = mins < 10 ? 'ok' : mins < 20 ? 'warn' : 'late';
         const priority = mins >= 20;
-        const mesaNum = p.mesaNum || (APP.mesas.find(m => m.id === p.mesaId)?.numero) || null;
-        const localLabel = p.tipo === 'salao'
-          ? (mesaNum ? `Mesa ${mesaNum}` : 'Salão')
-          : 'Delivery';
-        const localBadge = p.tipo === 'salao' ? 'badge-blue' : 'badge-amber';
         return `
         <div class="kds-ticket${priority ? ' priority' : ''}">
           <div class="kds-ticket-header">
             <div>
               <div class="kds-ticket-id">#${p.id}</div>
-              <span class="badge ${localBadge}" style="margin-top:4px;font-size:13px;font-weight:700">${localLabel}</span>
+              <div class="text-sm text-muted">${p.tipo === 'salao' ? 'Mesa ' + p.mesaNum : 'Delivery'}</div>
             </div>
             <div class="kds-timer ${timerClass}">${elapsed(p.criadoEm)}</div>
           </div>
@@ -702,44 +634,43 @@ function avancarStatusKds(id: number): void { avancarStatus(id); }
 
 /* ── CARDÁPIO ─────────────────────────────────────── */
 function cardapio(): string {
-  const isAdmin = APP.auth.usuario?.papel === 'admin';
   const pizzas  = APP.cardapio.filter(i => i.tipo === 'pizza');
   const bebidas = APP.cardapio.filter(i => i.tipo === 'bebida');
   return `
   <div class="card">
     <div class="card-header">
       <div class="card-title">Cardápio</div>
-      ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="openModalItem()">+ Novo Item</button>` : ''}
+      <button class="btn btn-primary btn-sm" onclick="openModalItem()">+ Novo Item</button>
     </div>
     <div class="tabs">
       <div class="tab active" onclick="switchCardTab(event,'pizza')">Pizzas</div>
       <div class="tab" onclick="switchCardTab(event,'bebida')">Bebidas</div>
     </div>
     <div id="tabPizza"><div class="table-wrap"><table>
-      <thead><tr><th>Nome</th><th>Tamanho</th><th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
+      <thead><tr><th>Nome</th><th>Tamanho</th><th>Preço</th><th>Status</th><th>Ações</th></tr></thead>
       <tbody>${pizzas.map(i => `
         <tr>
           <td><strong>${i.nome}</strong></td>
           <td>${i.tamanho || '-'}</td>
           <td>${money(i.preco)}</td>
           <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          ${isAdmin ? `<td><div class="flex gap-2">
+          <td><div class="flex gap-2">
             <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
             <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
-          </div></td>` : ''}
+          </div></td>
         </tr>`).join('')}</tbody>
     </table></div></div>
     <div id="tabBebida" style="display:none"><div class="table-wrap"><table>
-      <thead><tr><th>Nome</th><th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
+      <thead><tr><th>Nome</th><th>Preço</th><th>Status</th><th>Ações</th></tr></thead>
       <tbody>${bebidas.map(i => `
         <tr>
           <td><strong>${i.nome}</strong></td>
           <td>${money(i.preco)}</td>
           <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          ${isAdmin ? `<td><div class="flex gap-2">
+          <td><div class="flex gap-2">
             <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
             <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
-          </div></td>` : ''}
+          </div></td>
         </tr>`).join('')}</tbody>
     </table></div></div>
   </div>`;
@@ -1412,20 +1343,8 @@ function aplicarUsuarioLogado(usuario: Usuario): void {
   APP.auth.usuario = usuario;
   const el = document.getElementById('sidebarUser');
   if (el) el.textContent = usuario.nome + ' · ' + ({ admin: 'Admin', garcom: 'Garçom', cozinha: 'Cozinha' }[usuario.papel] || usuario.papel);
-  const permitidas = paginasPorPapel[usuario.papel] || ['dashboard'];
-  document.querySelectorAll('.nav-item[data-page]').forEach(navEl => {
-    const page = (navEl as HTMLElement).dataset.page!;
-    (navEl as HTMLElement).style.display = permitidas.includes(page) ? 'flex' : 'none';
-  });
-  const navSecCadastros = document.getElementById('navSecCadastros');
-  if (navSecCadastros) navSecCadastros.style.display =
-    (permitidas.includes('cardapio') || permitidas.includes('clientes')) ? 'block' : 'none';
-  const navSecPrincipal = document.getElementById('navSecPrincipal');
-  if (navSecPrincipal) navSecPrincipal.style.display = 'block';
-  const navSecFinanceiro = document.getElementById('navSecFinanceiro');
-  if (navSecFinanceiro) navSecFinanceiro.style.display = permitidas.includes('caixa') ? 'block' : 'none';
-  const navSecSistema = document.getElementById('navSecSistema');
-  if (navSecSistema) navSecSistema.style.display = usuario.papel === 'admin' ? 'block' : 'none';
+  const navU = document.getElementById('navUsuarios');
+  if (navU) navU.style.display = usuario.papel === 'admin' ? 'flex' : 'none';
   const ll = document.getElementById('loginLogo');
   if (ll) { ll.textContent = (APP.config.nome || 'P')[0].toUpperCase(); (ll as HTMLElement).style.background = APP.config.cor; }
   const ln = document.getElementById('loginNome');
