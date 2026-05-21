@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 import os
+import dj_database_url
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -30,7 +31,7 @@ SECRET_KEY = os.environ.get(
     "django-insecure-pizzaria-dev-secret-key",
 )
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,*").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -70,16 +72,18 @@ TEMPLATES = [ # pyright: ignore[reportUnknownVariableType]
     },
 ]
 
+_local_db = (
+    f"postgresql://{os.environ.get('DB_USER', 'postgres')}"
+    f":{os.environ.get('DB_PASSWORD', '')}"
+    f"@{os.environ.get('DB_HOST', 'localhost')}"
+    f":{os.environ.get('DB_PORT', '5432')}"
+    f"/{os.environ.get('DB_NAME', 'projeto')}"
+)
 DATABASES: dict[str, Any] = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'projeto'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-        'OPTIONS': {},
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', _local_db),
+        conn_max_age=600,
+    )
 }
 
 LANGUAGE_CODE = "pt-br"
@@ -88,7 +92,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR.parent / "staticfiles"
 STATICFILES_DIRS = [FRONTEND_DIR]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024
