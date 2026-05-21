@@ -48,6 +48,9 @@ def api_cardapio(request: HttpRequest):
     if request.method == 'GET':
         return add_cors(JsonResponse([i.to_dict() for i in Produto.objects.all()], safe=False))
     if request.method == 'POST':
+        perfil = _get_perfil(request)
+        if not _apenas_admin(perfil):
+            return add_cors(JsonResponse({'erro': 'Sem permissão'}, status=403))
         d = json.loads(request.body)
         tipo = d.get('tipo', 'pizza')
         item = Produto.objects.create(
@@ -66,6 +69,10 @@ def api_cardapio_detail(request: HttpRequest, pk: int):
     if request.method == 'OPTIONS':
         return add_cors(HttpResponse(status=204))
     item = get_object_or_404(Produto, pk=pk)
+    if request.method in ('PUT', 'DELETE'):
+        perfil = _get_perfil(request)
+        if not _apenas_admin(perfil):
+            return add_cors(JsonResponse({'erro': 'Sem permissão'}, status=403))
     if request.method == 'PUT':
         d = json.loads(request.body)
         item.nome = d.get('nome', item.nome)
@@ -87,6 +94,19 @@ def api_mesas(request: HttpRequest):
     if request.method == 'OPTIONS':
         return add_cors(HttpResponse(status=204))
     if request.method == 'GET':
+        if Mesa.objects.count() == 0:
+            cfg = Configuracao.objects.filter(pk=1).first()
+            total = cfg.num_mesas if cfg else 10
+            from django.db import connection as _conn
+            try:
+                with _conn.cursor() as cur:
+                    for i in range(1, total + 1):
+                        cur.execute(
+                            "INSERT INTO mesas (numero_mesa, num, status, capacidade, abertura) VALUES (%s, %s, 'Livre', 4, NULL) ON CONFLICT (num) DO NOTHING",
+                            [i, i]
+                        )
+            except Exception:
+                pass
         return add_cors(JsonResponse([m.to_dict() for m in Mesa.objects.all()], safe=False))
     if request.method == 'POST':
         d = json.loads(request.body)
@@ -197,6 +217,8 @@ def api_pedido_detail(request: HttpRequest, pk: int):
     if request.method == 'OPTIONS':
         return add_cors(HttpResponse(status=204))
     ped = get_object_or_404(Pedido.objects.prefetch_related('itens__produto'), pk=pk)
+    if request.method == 'GET':
+        return add_cors(JsonResponse(ped.to_dict()))
     if request.method == 'PUT':
         d = json.loads(request.body)
         ped.status = d.get('status', ped.status)
