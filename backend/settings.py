@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get(
     "django-insecure-pizzaria-dev-secret-key",
 )
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,*").split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,pizzaria-mvp.up.railway.app,web-production-18925.up.railway.app").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
