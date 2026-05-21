@@ -115,6 +115,3 @@ python manage.py runserver
 - Incremeto de tela cliente para a Reversa do local.
 - Pagina de login 
 
-## Login
-- usuario: admin
-- senha: admin123
