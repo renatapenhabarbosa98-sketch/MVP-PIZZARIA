@@ -259,9 +259,7 @@ function configPayload(): ConfigPayload {
   };
 }
 function apiUrl(path: string): string {
-  const isDjangoServer = ['127.0.0.1:8000', 'localhost:8000'].includes(window.location.host);
-  const base = isDjangoServer ? '' : 'http://127.0.0.1:8000';
-  return `${base}${path}`;
+  return path;
 }
 function apiFetch(path: string, opts: RequestInit = {}): Promise<Response> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...((opts.headers as Record<string, string>) || {}) };
