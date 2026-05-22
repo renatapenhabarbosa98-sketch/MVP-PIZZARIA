@@ -1309,20 +1309,23 @@ function buscarProdutoPizza(sabor, tam) {
         extrairSaborDoNome(i.nome) === sabor &&
         (i.tamanho === tam || extrairTamanhoDoNome(i.nome) === tam));
 }
+function precoDeTamanho(sabor, tam) {
+    const prod = buscarProdutoPizza(sabor, tam);
+    return prod ? prod.preco : (PRECOS_TAMANHO[tam] ?? 0);
+}
 function atualizarTamanhosBySabor() {
     const val = document.getElementById('pedSabor').value;
     const grupo = document.getElementById('pedTamanhoGroup');
     const precoEl = document.getElementById('pedPrecoTamanho');
     _tamSelecionado = '';
-    document.querySelectorAll('.tam-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tam-btn').forEach(b => { b.classList.remove('active'); b.disabled = false; });
     if (val.startsWith('pizza:')) {
         const sabor = val.substring(6);
         grupo.style.display = 'block';
         document.querySelectorAll('.tam-btn').forEach(btn => {
             const tam = btn.dataset.tam;
-            const prod = buscarProdutoPizza(sabor, tam);
-            btn.textContent = prod ? `${tam} — ${money(prod.preco)}` : tam;
-            btn.disabled = !prod;
+            const preco = precoDeTamanho(sabor, tam);
+            btn.textContent = preco ? `${tam} — ${money(preco)}` : tam;
         });
         precoEl.textContent = '';
     }
@@ -1332,15 +1335,13 @@ function atualizarTamanhosBySabor() {
     }
 }
 function selecionarTamanho(btn, tam) {
-    if (btn.disabled)
-        return;
     document.querySelectorAll('.tam-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     _tamSelecionado = tam;
     const sabor = document.getElementById('pedSabor').value.substring(6);
-    const prod = buscarProdutoPizza(sabor, tam);
+    const preco = precoDeTamanho(sabor, tam);
     const precoEl = document.getElementById('pedPrecoTamanho');
-    precoEl.textContent = prod ? `Preço: ${money(prod.preco)}` : '';
+    precoEl.textContent = preco ? `Preço: ${money(preco)}` : '';
 }
 function addItemPedido() {
     const val = document.getElementById('pedSabor').value;
@@ -1357,24 +1358,34 @@ function addItemPedido() {
             return;
         }
         const sabor = val.substring(6);
-        item = buscarProdutoPizza(sabor, _tamSelecionado);
-        if (!item) {
-            toast('Tamanho não disponível para este sabor', 'error');
+        const preco = precoDeTamanho(sabor, _tamSelecionado);
+        const base = buscarProdutoPizza(sabor, _tamSelecionado)
+            || APP.cardapio.find(i => i.ativo && i.tipo === 'pizza' && extrairSaborDoNome(i.nome) === sabor);
+        if (!base) {
+            toast('Sabor não encontrado no cardápio', 'error');
             return;
+        }
+        const nomeItem = `${sabor} (${_tamSelecionado})`;
+        const existing = APP.pedidoTemp.items.find(i => i.id === base.id && i.nome === nomeItem && i.obs === obs);
+        if (existing) {
+            existing.qtd += qtd;
+        }
+        else {
+            APP.pedidoTemp.items.push({ id: base.id, nome: nomeItem, preco, qtd, obs });
         }
     }
     else {
         const id = parseInt(val.substring(7));
         item = APP.cardapio.find(i => i.id === id && i.ativo);
-    }
-    if (!item)
-        return;
-    const existing = APP.pedidoTemp.items.find(i => i.id === item.id && i.obs === obs);
-    if (existing) {
-        existing.qtd += qtd;
-    }
-    else {
-        APP.pedidoTemp.items.push({ id: item.id, nome: item.nome, preco: item.preco, qtd, obs });
+        if (!item)
+            return;
+        const existing = APP.pedidoTemp.items.find(i => i.id === item.id && i.obs === obs);
+        if (existing) {
+            existing.qtd += qtd;
+        }
+        else {
+            APP.pedidoTemp.items.push({ id: item.id, nome: item.nome, preco: item.preco, qtd, obs });
+        }
     }
     document.getElementById('pedObs').value = '';
     renderPedidoItems();
