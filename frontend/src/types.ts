@@ -1,7 +1,7 @@
 // ── Tipos primitivos ──────────────────────────────────────────────────────────
 
 type Tema         = 'light' | 'dark';
-type TipoPedido   = 'salao' | 'delivery';
+type TipoPedido   = 'salao';
 type StatusMesa   = 'livre' | 'ocupada' | 'reservada';
 type PapelUsuario = 'admin' | 'garcom' | 'cozinha';
 type ToastTipo    = 'info' | 'success' | 'error';
@@ -61,8 +61,6 @@ interface Pedido {
   tipo: TipoPedido;
   mesaId: number | null;
   mesaNum: number | null;
-  clienteId: number | null;
-  clienteNome: string;
   items: ItemPedido[];
   total: number;
   status: string;
@@ -88,9 +86,7 @@ interface Pagamento {
 
 interface PedidoTemp {
   items: ItemPedido[];
-  tipo: TipoPedido;
   mesaId: number | null;
-  clienteId: number | null;
 }
 
 interface NextId {

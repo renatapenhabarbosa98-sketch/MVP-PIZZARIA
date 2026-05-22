@@ -19,7 +19,7 @@ const APP = {
     currentPage: 'dashboard',
     editingItem: null,
     editingCliente: null,
-    pedidoTemp: { items: [], tipo: 'salao', mesaId: null, clienteId: null },
+    pedidoTemp: { items: [], mesaId: null },
     fecharPedidoId: null,
     kdsTimers: {},
 };
@@ -849,7 +849,7 @@ function clientes() {
               <td>${escapeHtml(c.telefone)}</td>
               <td>${c.mesaReserva ? `<span class="badge badge-blue">Mesa ${c.mesaReserva}</span>` : '<span class="text-muted">-</span>'}</td>
               <td class="text-sm">${c.dataEvento ? `<span class="badge badge-amber">${fmtDataEvento(c.dataEvento)}</span>` : '<span class="text-muted">-</span>'}</td>
-              <td>${APP.pedidos.filter(p => p.clienteId === c.id).length}</td>
+              <td>—</td>
               <td>
                 <div class="flex gap-2">
                   <button class="btn btn-sm btn-secondary" onclick="editCliente(${c.id})">Editar</button>
@@ -1260,7 +1260,7 @@ async function salvarConfig() {
    PEDIDO MODAL
 ══════════════════════════════════════════════════════ */
 function openModalPedido() {
-    APP.pedidoTemp = { items: [], tipo: 'salao', mesaId: null, clienteId: null };
+    APP.pedidoTemp = { items: [], mesaId: null };
     const sel = document.getElementById('pedMesa');
     const livres = APP.mesas.filter(m => m.status !== 'ocupada');
     sel.innerHTML = livres.map(m => `<option value="${m.id}">Mesa ${m.numero} (${statusLabel(m.status)})</option>`).join('');
@@ -1337,7 +1337,7 @@ async function salvarPedido() {
         const resp = await apiFetch('/api/pedidos/', {
             method: 'POST',
             body: JSON.stringify({
-                tipo: 'salao', mesaId, mesaNum, clienteId: null, clienteNome: '',
+                tipo: 'salao', mesaId, mesaNum,
                 total, status: 'Em preparo', criadoEm,
                 items: items.map(i => ({ id: i.id, qtd: i.qtd, preco: i.preco, obs: i.obs })),
             }),
