@@ -188,7 +188,7 @@
     <div class="form-group">
       <label>Tamanho</label>
       <div class="flex gap-2" style="flex-wrap:wrap">
-        <button type="button" class="btn btn-secondary btn-sm tam-btn active" data-tam="" onclick="selecionarTamanho(this,'')">Todos</button>
+        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="" onclick="selecionarTamanho(this,'')">Todos</button>
         <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="P" onclick="selecionarTamanho(this,'P')">P – 4 fatias · R$ 48,90</button>
         <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="M" onclick="selecionarTamanho(this,'M')">M – 6 fatias · R$ 58,90</button>
         <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="G" onclick="selecionarTamanho(this,'G')">G – 8 fatias · R$ 66,90</button>
@@ -198,7 +198,7 @@
     <div class="form-group">
       <label>Adicionar Item</label>
       <div class="flex gap-2">
-        <select class="form-control" id="pedItem"></select>
+        <select class="form-control" id="pedItem" onchange="destacarTamanhoDoPedidoItem()"></select>
         <input type="number" class="form-control" id="pedQtd" value="1" min="1" style="max-width:70px">
         <button class="btn btn-secondary" onclick="addItemPedido()">+</button>
       </div>

@@ -1259,10 +1259,6 @@ async function salvarConfig() {
 ══════════════════════════════════════════════════════ */
 function openModalPedido() {
     APP.pedidoTemp = { items: [], mesaId: null };
-    _tamSelecionado = '';
-    document.querySelectorAll('.tam-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.tam === '');
-    });
     const sel = document.getElementById('pedMesa');
     const livres = APP.mesas.filter(m => m.status !== 'ocupada');
     sel.innerHTML = livres.map(m => `<option value="${m.id}">Mesa ${m.numero} (${statusLabel(m.status)})</option>`).join('');
@@ -1270,23 +1266,32 @@ function openModalPedido() {
     populatePedidoItem();
     openModal('modalPedido');
 }
-let _tamSelecionado = '';
 function selecionarTamanho(btn, tam) {
-    _tamSelecionado = tam;
     document.querySelectorAll('.tam-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    populatePedidoItem();
+    const sel = document.getElementById('pedItem');
+    const currentId = parseInt(sel.value);
+    const current = APP.cardapio.find(x => x.id === currentId);
+    if (tam && current && current.tipo === 'pizza') {
+        const mesmaPizzaNoTamanho = APP.cardapio.find(x => x.ativo && x.tipo === 'pizza' && x.nome === current.nome && x.tamanho === tam);
+        if (mesmaPizzaNoTamanho)
+            sel.value = String(mesmaPizzaNoTamanho.id);
+    }
+}
+function destacarTamanhoDoPedidoItem() {
+    const sel = document.getElementById('pedItem');
+    const itemId = parseInt(sel.value);
+    const item = APP.cardapio.find(x => x.id === itemId);
+    const tam = item?.tamanho || '';
+    document.querySelectorAll('.tam-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tam === tam);
+    });
 }
 function populatePedidoItem() {
     const sel = document.getElementById('pedItem');
-    const ativos = APP.cardapio.filter(i => {
-        if (!i.ativo)
-            return false;
-        if (_tamSelecionado)
-            return i.tamanho === _tamSelecionado;
-        return true;
-    });
+    const ativos = APP.cardapio.filter(i => i.ativo);
     sel.innerHTML = ativos.map(i => `<option value="${i.id}">${i.nome}${i.tamanho ? ` (${i.tamanho})` : ''} — ${money(i.preco)}</option>`).join('');
+    destacarTamanhoDoPedidoItem();
 }
 function addItemPedido() {
     const itemId = parseInt(document.getElementById('pedItem').value);
