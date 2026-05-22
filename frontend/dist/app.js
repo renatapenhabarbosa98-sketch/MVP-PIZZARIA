@@ -165,6 +165,15 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
             closeModal(overlay.id);
     };
 });
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape')
+        return;
+    const aberto = document.querySelector('.modal-overlay.open');
+    if (aberto) {
+        closeModal(aberto.id);
+        return;
+    }
+});
 /* ══════════════════════════════════════════════════════
    TOAST
 ══════════════════════════════════════════════════════ */
