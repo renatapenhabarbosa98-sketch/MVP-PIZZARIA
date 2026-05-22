@@ -1198,6 +1198,14 @@ function populatePedidoSabor(): void {
   atualizarTamanhosBySabor();
 }
 
+function buscarProdutoPizza(sabor: string, tam: string): ItemCardapio | undefined {
+  return APP.cardapio.find(i =>
+    i.ativo && i.tipo === 'pizza' &&
+    extrairSaborDoNome(i.nome) === sabor &&
+    (i.tamanho === tam || extrairTamanhoDoNome(i.nome) === tam)
+  );
+}
+
 function atualizarTamanhosBySabor(): void {
   const val = (document.getElementById('pedSabor') as HTMLSelectElement).value;
   const grupo = document.getElementById('pedTamanhoGroup') as HTMLElement;
@@ -1209,7 +1217,7 @@ function atualizarTamanhosBySabor(): void {
     grupo.style.display = 'block';
     document.querySelectorAll('.tam-btn').forEach(btn => {
       const tam = (btn as HTMLElement).dataset.tam!;
-      const prod = APP.cardapio.find(i => i.ativo && extrairSaborDoNome(i.nome) === sabor && extrairTamanhoDoNome(i.nome) === tam);
+      const prod = buscarProdutoPizza(sabor, tam);
       (btn as HTMLElement).textContent = prod ? `${tam} — ${money(prod.preco)}` : tam;
       (btn as HTMLButtonElement).disabled = !prod;
     });
@@ -1226,7 +1234,7 @@ function selecionarTamanho(btn: HTMLElement, tam: string): void {
   btn.classList.add('active');
   _tamSelecionado = tam;
   const sabor = (document.getElementById('pedSabor') as HTMLSelectElement).value.substring(6);
-  const prod = APP.cardapio.find(i => i.ativo && extrairSaborDoNome(i.nome) === sabor && extrairTamanhoDoNome(i.nome) === tam);
+  const prod = buscarProdutoPizza(sabor, tam);
   const precoEl = document.getElementById('pedPrecoTamanho') as HTMLElement;
   precoEl.textContent = prod ? `Preço: ${money(prod.preco)}` : '';
 }
@@ -1240,7 +1248,7 @@ function addItemPedido(): void {
   if (val.startsWith('pizza:')) {
     if (!_tamSelecionado) { toast('Selecione o tamanho', 'error'); return; }
     const sabor = val.substring(6);
-    item = APP.cardapio.find(i => i.ativo && extrairSaborDoNome(i.nome) === sabor && extrairTamanhoDoNome(i.nome) === _tamSelecionado);
+    item = buscarProdutoPizza(sabor, _tamSelecionado);
     if (!item) { toast('Tamanho não disponível para este sabor', 'error'); return; }
   } else {
     const id = parseInt(val.substring(7));
