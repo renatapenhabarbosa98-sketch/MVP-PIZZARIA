@@ -9,6 +9,7 @@ class Produto(models.Model):
     categoria = models.CharField(max_length=100, blank=True, default='', db_column='categoria')
     categoria_id = models.IntegerField(null=True, blank=True, db_column='categoria_id')
     ativo = models.BooleanField(default=True)
+    tamanho = models.CharField(max_length=5, blank=True, default='')
 
     class Meta:
         db_table = "cardapio"
@@ -29,7 +30,7 @@ class Produto(models.Model):
             'id': self.id,
             'nome': self.nome,
             'tipo': tipo,
-            'tam': '',
+            'tam': self.tamanho or '',
             'preco': float(self.preco),
             'ativo': self.ativo,
         }

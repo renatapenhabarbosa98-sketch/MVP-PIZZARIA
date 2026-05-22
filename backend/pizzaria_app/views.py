@@ -59,6 +59,7 @@ def api_cardapio(request: HttpRequest):
             preco=d['preco'],
             categoria_id=1 if tipo == 'pizza' else 2,
             ativo=d.get('ativo', True),
+            tamanho=d.get('tam', d.get('tamanho', '')),
         )
         return add_cors(JsonResponse(item.to_dict(), status=201))
     return add_cors(JsonResponse({'erro': 'Método não permitido'}, status=405))
@@ -81,6 +82,7 @@ def api_cardapio_detail(request: HttpRequest, pk: int):
         item.descricao = d.get('descricao', item.descricao)
         item.preco = d.get('preco', item.preco)
         item.ativo = d.get('ativo', item.ativo)
+        item.tamanho = d.get('tam', d.get('tamanho', item.tamanho))
         item.save()
         return add_cors(JsonResponse(item.to_dict()))
     if request.method == 'DELETE':

@@ -397,7 +397,7 @@ function dashboard(): string {
         : APP.pedidos.filter(p => p.status !== 'Finalizado').slice(0, 5).map(p => `
           <div class="flex items-center justify-between" style="padding:8px 0;border-bottom:1px solid var(--border)">
             <div>
-              <div class="font-bold" style="font-size:13px">Pedido #${p.id} — ${p.tipo === 'salao' ? 'Mesa ' + p.mesaNum : 'Delivery'}</div>
+              <div class="font-bold" style="font-size:13px">Pedido #${p.id} — Mesa ${p.mesaNum || '—'}</div>
               <div class="text-muted text-sm">${p.items.length} itens · ${money(p.total)}</div>
             </div>
             <span class="badge ${pedStatusBadge(p.status)}">${pedStatusLabel(p.status)}</span>
@@ -550,15 +550,14 @@ function pedidos(): string {
       ? '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg><h3>Nenhum pedido encontrado</h3></div>'
       : `<div class="table-wrap"><table>
           <thead><tr>
-            <th>#</th><th>Tipo</th><th>Mesa / Cliente</th>
+            <th>#</th><th>Mesa</th>
             <th>Itens</th><th>Total</th><th>Status</th><th>Hora</th><th>Ações</th>
           </tr></thead>
           <tbody>
           ${filtered.map(p => `
             <tr>
               <td><strong>#${p.id}</strong></td>
-              <td><span class="badge ${p.tipo === 'salao' ? 'badge-blue' : 'badge-amber'}">${p.tipo === 'salao' ? 'Salão' : 'Delivery'}</span></td>
-              <td>${p.tipo === 'salao' ? 'Mesa ' + p.mesaNum : (p.clienteNome || '—')}</td>
+              <td><strong>Mesa ${p.mesaNum || '—'}</strong></td>
               <td class="text-muted">${p.items.length} item(ns)</td>
               <td><strong>${money(p.total)}</strong></td>
               <td><span class="badge ${pedStatusBadge(p.status)}">${pedStatusLabel(p.status)}</span></td>
@@ -615,7 +614,7 @@ function kds(): string {
           <div class="kds-ticket-header">
             <div>
               <div class="kds-ticket-id">#${p.id}</div>
-              <div class="text-sm text-muted">${p.tipo === 'salao' ? 'Mesa ' + p.mesaNum : 'Delivery'}</div>
+              <div class="text-sm text-muted">Mesa ${p.mesaNum || '—'}</div>
             </div>
             <div class="kds-timer ${timerClass}">${elapsed(p.criadoEm)}</div>
           </div>
@@ -1145,26 +1144,11 @@ async function salvarConfig(): Promise<void> {
 ══════════════════════════════════════════════════════ */
 function openModalPedido(): void {
   APP.pedidoTemp = { items: [], tipo: 'salao', mesaId: null, clienteId: null };
-  (document.getElementById('pedTipo') as HTMLSelectElement).value = 'salao';
-  renderPedidoExtra(); renderPedidoItems(); populatePedidoItem();
+  const sel = document.getElementById('pedMesa') as HTMLSelectElement;
+  const livres = APP.mesas.filter(m => m.status !== 'ocupada');
+  sel.innerHTML = livres.map(m => `<option value="${m.id}">Mesa ${m.numero} (${statusLabel(m.status)})</option>`).join('');
+  renderPedidoItems(); populatePedidoItem();
   openModal('modalPedido');
-}
-function renderPedidoExtra(): void {
-  const tipo = (document.getElementById('pedTipo') as HTMLSelectElement).value as TipoPedido;
-  const el   = document.getElementById('extraPedido') as HTMLElement;
-  if (tipo === 'salao') {
-    const livres = APP.mesas.filter(m => m.status !== 'ocupada');
-    el.innerHTML = `<label>Mesa</label>
-    <select class="form-control" id="pedMesa">
-      ${livres.map(m => `<option value="${m.id}">Mesa ${m.numero} (${statusLabel(m.status)})</option>`).join('')}
-    </select>`;
-  } else {
-    el.innerHTML = `<label>Cliente</label>
-    <select class="form-control" id="pedCliente">
-      <option value="">-- Sem cliente --</option>
-      ${APP.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
-    </select>`;
-  }
 }
 function populatePedidoItem(): void {
   const sel   = document.getElementById('pedItem') as HTMLSelectElement;
@@ -1213,30 +1197,20 @@ function removeItemPedido(i: number): void {
   renderPedidoItems();
 }
 async function salvarPedido(): Promise<void> {
-  const tipo  = (document.getElementById('pedTipo') as HTMLSelectElement).value as TipoPedido;
   const items = APP.pedidoTemp.items;
   if (items.length === 0) { toast('Adicione pelo menos um item', 'error'); return; }
-  let mesaId: number | null = null, mesaNum: number | null = null;
-  let clienteId: number | null = null, clienteNome: string = '';
-  if (tipo === 'salao') {
-    const mSel = document.getElementById('pedMesa') as HTMLSelectElement;
-    mesaId = mSel ? parseInt(mSel.value) : null;
-    const m = APP.mesas.find(x => x.id === mesaId);
-    if (!m) { toast('Selecione uma mesa', 'error'); return; }
-    mesaNum = m.numero;
-  } else {
-    const cSel = document.getElementById('pedCliente') as HTMLSelectElement;
-    clienteId = cSel && cSel.value ? parseInt(cSel.value) : null;
-    const c   = clienteId ? APP.clientes.find(x => x.id === clienteId) : null;
-    clienteNome = c ? c.nome : 'Avulso';
-  }
+  const mSel = document.getElementById('pedMesa') as HTMLSelectElement;
+  const mesaId = mSel ? parseInt(mSel.value) : null;
+  const m = APP.mesas.find(x => x.id === mesaId);
+  if (!m) { toast('Selecione uma mesa', 'error'); return; }
+  const mesaNum = m.numero;
   const criadoEm = Date.now();
   const total    = pedTotalCalc(items);
   try {
     const resp = await apiFetch('/api/pedidos/', {
       method: 'POST',
       body: JSON.stringify({
-        tipo, mesaId, mesaNum, clienteId, clienteNome,
+        tipo: 'salao', mesaId, mesaNum, clienteId: null, clienteNome: '',
         total, status: 'Em preparo', criadoEm,
         items: items.map(i => ({ id: i.id, qtd: i.qtd, preco: i.preco, obs: i.obs })),
       }),
@@ -1244,12 +1218,9 @@ async function salvarPedido(): Promise<void> {
     if (!resp.ok) throw new Error('Falha ao criar pedido');
     const pedido: Pedido = await resp.json();
     APP.pedidos.push(pedido);
-    if (tipo === 'salao' && mesaId !== null) {
-      const m = APP.mesas.find(x => x.id === mesaId);
-      if (m) {
-        m.status = 'ocupada'; m.horaAbertura = criadoEm;
-        apiFetch(`/api/mesas/${mesaId}/`, { method: 'PUT', body: JSON.stringify({ status: 'ocupada', abertura: criadoEm }) });
-      }
+    if (mesaId !== null) {
+      m.status = 'ocupada'; m.horaAbertura = criadoEm;
+      apiFetch(`/api/mesas/${mesaId}/`, { method: 'PUT', body: JSON.stringify({ status: 'ocupada', abertura: criadoEm }) });
     }
     saveStorage(); closeModal('modalPedido'); render();
     toast(`Pedido #${pedido.id} aberto!`, 'success');
@@ -1278,7 +1249,7 @@ function abrirFecharContaPedido(pedidoId: number): void {
   <div style="margin-bottom:12px">
     <div class="flex items-center justify-between mb-2">
       <strong>Pedido #${p.id}</strong>
-      <span>${p.tipo === 'salao' ? 'Mesa ' + p.mesaNum : p.clienteNome || 'Delivery'}</span>
+      <span>Mesa ${p.mesaNum || '—'}</span>
     </div>
     ${p.items.map(i => `
       <div class="flex items-center justify-between text-sm" style="padding:3px 0">
@@ -1301,7 +1272,7 @@ async function confirmarFechamento(): Promise<void> {
   if (!formaEl) { toast('Selecione o método de pagamento!', 'error'); return; }
   const forma = formaEl.value;
   const dataPag  = Date.now();
-  const desc     = p.tipo === 'salao' ? 'Mesa ' + p.mesaNum : (p.clienteNome || 'Delivery');
+  const desc     = 'Mesa ' + (p.mesaNum || '—');
   try {
     const r1 = await apiFetch(`/api/pedidos/${id}/`, { method: 'PUT', body: JSON.stringify({ status: 'Finalizado' }) });
     if (!r1.ok) {
