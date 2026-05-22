@@ -695,12 +695,23 @@ function switchCardTab(e: Event, tipo: string): void {
   (document.getElementById('tabPizza') as HTMLElement).style.display  = tipo === 'pizza'  ? 'block' : 'none';
   (document.getElementById('tabBebida') as HTMLElement).style.display = tipo === 'bebida' ? 'block' : 'none';
 }
+const PRECOS_TAMANHO: Record<string, number> = { P: 48.90, M: 58.90, G: 66.90, GG: 66.90 };
+function autoPrecoTamanho(): void {
+  const tipo = (document.getElementById('itemTipo') as HTMLSelectElement).value;
+  const tam  = (document.getElementById('itemTamanho') as HTMLSelectElement).value;
+  if (tipo !== 'pizza' || !tam) return;
+  const preco = PRECOS_TAMANHO[tam];
+  if (preco !== undefined) {
+    (document.getElementById('itemPreco') as HTMLInputElement).value = String(preco.toFixed(2));
+  }
+}
 function openModalItem(): void {
   APP.editingItem = null;
   (document.getElementById('modalItemTitle') as HTMLElement).textContent = 'Novo Item';
   ['itemNome', 'itemPreco'].forEach(id => ((document.getElementById(id) as HTMLInputElement).value = ''));
   (document.getElementById('itemTipo') as HTMLSelectElement).value    = 'pizza';
   (document.getElementById('itemTamanho') as HTMLSelectElement).value = 'G';
+  autoPrecoTamanho();
   openModal('modalItem');
 }
 function editItem(id: number): void {

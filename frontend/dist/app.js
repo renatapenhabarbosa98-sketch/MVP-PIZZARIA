@@ -724,12 +724,24 @@ function switchCardTab(e, tipo) {
     document.getElementById('tabPizza').style.display = tipo === 'pizza' ? 'block' : 'none';
     document.getElementById('tabBebida').style.display = tipo === 'bebida' ? 'block' : 'none';
 }
+const PRECOS_TAMANHO = { P: 48.90, M: 58.90, G: 66.90, GG: 66.90 };
+function autoPrecoTamanho() {
+    const tipo = document.getElementById('itemTipo').value;
+    const tam = document.getElementById('itemTamanho').value;
+    if (tipo !== 'pizza' || !tam)
+        return;
+    const preco = PRECOS_TAMANHO[tam];
+    if (preco !== undefined) {
+        document.getElementById('itemPreco').value = String(preco.toFixed(2));
+    }
+}
 function openModalItem() {
     APP.editingItem = null;
     document.getElementById('modalItemTitle').textContent = 'Novo Item';
     ['itemNome', 'itemPreco'].forEach(id => (document.getElementById(id).value = ''));
     document.getElementById('itemTipo').value = 'pizza';
     document.getElementById('itemTamanho').value = 'G';
+    autoPrecoTamanho();
     openModal('modalItem');
 }
 function editItem(id) {
