@@ -93,17 +93,7 @@ const titles = {
     kds: 'KDS – Tela da Cozinha', cardapio: 'Cardápio', clientes: 'Clientes',
     caixa: 'Caixa do Dia', config: 'Configurações', usuarios: 'Usuários do Sistema',
 };
-const paginasPorPapel = {
-    admin: ['dashboard', 'mesas', 'pedidos', 'kds', 'cardapio', 'clientes', 'caixa', 'config', 'usuarios'],
-    garcom: ['dashboard', 'mesas', 'pedidos', 'kds', 'cardapio'],
-    cozinha: ['dashboard', 'mesas', 'pedidos', 'kds', 'cardapio'],
-};
 function navigate(page) {
-    const papel = APP.auth.usuario?.papel;
-    if (papel && papel !== 'admin') {
-        if (!(paginasPorPapel[papel] || []).includes(page))
-            return;
-    }
     APP.currentPage = page;
     document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.toggle('active', el.dataset.page === page);
@@ -668,44 +658,43 @@ function toggleKdsItem(pedId, idx) {
 function avancarStatusKds(id) { avancarStatus(id); }
 /* ── CARDÁPIO ─────────────────────────────────────── */
 function cardapio() {
-    const isAdmin = APP.auth.usuario?.papel === 'admin';
     const pizzas = APP.cardapio.filter(i => i.tipo === 'pizza');
     const bebidas = APP.cardapio.filter(i => i.tipo === 'bebida');
     return `
   <div class="card">
     <div class="card-header">
       <div class="card-title">Cardápio</div>
-      ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="openModalItem()">+ Novo Item</button>` : ''}
+      <button class="btn btn-primary btn-sm" onclick="openModalItem()">+ Novo Item</button>
     </div>
     <div class="tabs">
       <div class="tab active" onclick="switchCardTab(event,'pizza')">Pizzas</div>
       <div class="tab" onclick="switchCardTab(event,'bebida')">Bebidas</div>
     </div>
     <div id="tabPizza"><div class="table-wrap"><table>
-      <thead><tr><th>Nome</th><th>Tamanho</th><th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
+      <thead><tr><th>Nome</th><th>Tamanho</th><th>Preço</th><th>Status</th><th>Ações</th></tr></thead>
       <tbody>${pizzas.map(i => `
         <tr>
           <td><strong>${i.nome}</strong></td>
           <td>${i.tamanho || '-'}</td>
           <td>${money(i.preco)}</td>
           <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          ${isAdmin ? `<td><div class="flex gap-2">
+          <td><div class="flex gap-2">
             <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
             <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
-          </div></td>` : ''}
+          </div></td>
         </tr>`).join('')}</tbody>
     </table></div></div>
     <div id="tabBebida" style="display:none"><div class="table-wrap"><table>
-      <thead><tr><th>Nome</th><th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
+      <thead><tr><th>Nome</th><th>Preço</th><th>Status</th><th>Ações</th></tr></thead>
       <tbody>${bebidas.map(i => `
         <tr>
           <td><strong>${i.nome}</strong></td>
           <td>${money(i.preco)}</td>
           <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          ${isAdmin ? `<td><div class="flex gap-2">
+          <td><div class="flex gap-2">
             <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
             <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
-          </div></td>` : ''}
+          </div></td>
         </tr>`).join('')}</tbody>
     </table></div></div>
   </div>`;
@@ -1479,20 +1468,9 @@ function aplicarUsuarioLogado(usuario) {
     const el = document.getElementById('sidebarUser');
     if (el)
         el.textContent = usuario.nome + ' · ' + ({ admin: 'Admin', garcom: 'Garçom', cozinha: 'Cozinha' }[usuario.papel] || usuario.papel);
-    const permitidas = paginasPorPapel[usuario.papel] || ['dashboard'];
-    document.querySelectorAll('.nav-item[data-page]').forEach(navEl => {
-        const page = navEl.dataset.page;
-        navEl.style.display = permitidas.includes(page) ? 'flex' : 'none';
-    });
-    const secCadastros = document.getElementById('navSecCadastros');
-    if (secCadastros)
-        secCadastros.style.display = permitidas.includes('cardapio') || permitidas.includes('clientes') ? 'block' : 'none';
-    const secFinanceiro = document.getElementById('navSecFinanceiro');
-    if (secFinanceiro)
-        secFinanceiro.style.display = permitidas.includes('caixa') ? 'block' : 'none';
-    const secSistema = document.getElementById('navSecSistema');
-    if (secSistema)
-        secSistema.style.display = usuario.papel === 'admin' ? 'block' : 'none';
+    const navU = document.getElementById('navUsuarios');
+    if (navU)
+        navU.style.display = usuario.papel === 'admin' ? 'flex' : 'none';
     const ll = document.getElementById('loginLogo');
     if (ll) {
         ll.textContent = (APP.config.nome || 'P')[0].toUpperCase();

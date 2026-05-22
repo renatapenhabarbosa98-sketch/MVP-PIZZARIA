@@ -48,9 +48,6 @@ def api_cardapio(request: HttpRequest):
     if request.method == 'GET':
         return add_cors(JsonResponse([i.to_dict() for i in Produto.objects.all()], safe=False))
     if request.method == 'POST':
-        perfil = _get_perfil(request)
-        if not _apenas_admin(perfil):
-            return add_cors(JsonResponse({'erro': 'Sem permissão'}, status=403))
         d = json.loads(request.body)
         tipo = d.get('tipo', 'pizza')
         item = Produto.objects.create(
@@ -69,10 +66,6 @@ def api_cardapio_detail(request: HttpRequest, pk: int):
     if request.method == 'OPTIONS':
         return add_cors(HttpResponse(status=204))
     item = get_object_or_404(Produto, pk=pk)
-    if request.method in ('PUT', 'DELETE'):
-        perfil = _get_perfil(request)
-        if not _apenas_admin(perfil):
-            return add_cors(JsonResponse({'erro': 'Sem permissão'}, status=403))
     if request.method == 'PUT':
         d = json.loads(request.body)
         item.nome = d.get('nome', item.nome)
