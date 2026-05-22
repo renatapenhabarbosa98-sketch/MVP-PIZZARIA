@@ -449,7 +449,7 @@ function openMesaModal(id: number): void {
   const m = APP.mesas.find(x => x.id === id);
   if (!m) return;
   (document.getElementById('mesaModalNum') as HTMLElement).textContent = String(m.numero);
-  const pedAtivos = APP.pedidos.filter(p => p.mesaId === id && p.status !== 'Finalizado');
+  const pedAtivos = APP.pedidos.filter(p => p.status !== 'Finalizado' && (p.mesaId === id || p.mesaNum === m.numero));
   let body = `
   <div class="flex items-center justify-between mb-3">
     <span class="badge ${statusBadge(m.status)}">${statusLabel(m.status)}</span>
@@ -1263,7 +1263,10 @@ async function salvarPedido(): Promise<void> {
 ══════════════════════════════════════════════════════ */
 function abrirFecharConta(mesaId: number): void {
   closeModal('modalMesa');
-  const pedAtivos = APP.pedidos.filter(p => p.mesaId === mesaId && p.status !== 'Finalizado');
+  const mesa = APP.mesas.find(x => x.id === mesaId);
+  const pedAtivos = APP.pedidos.filter(p =>
+    p.status !== 'Finalizado' && (p.mesaId === mesaId || (mesa && p.mesaNum === mesa.numero))
+  );
   if (pedAtivos.length === 0) { toast('Sem pedidos abertos nesta mesa', 'error'); return; }
   abrirFecharContaPedido(pedAtivos[0].id);
 }
@@ -1318,14 +1321,16 @@ async function confirmarFechamento(): Promise<void> {
     p.status = 'Finalizado';
     APP.pagamentos.push({ pedidoId: id, forma, valor: p.total, data: dataPag, desc });
 
-    if (p.mesaId) {
-      const pendentes = APP.pedidos.filter(pp => pp.mesaId === p.mesaId && pp.status !== 'Finalizado');
+    const mesaDoP = p.mesaId
+      ? APP.mesas.find(m => m.id === p.mesaId)
+      : APP.mesas.find(m => m.numero === p.mesaNum);
+    if (mesaDoP) {
+      const pendentes = APP.pedidos.filter(pp =>
+        pp.status !== 'Finalizado' && (pp.mesaId === mesaDoP.id || pp.mesaNum === mesaDoP.numero)
+      );
       if (pendentes.length === 0) {
-        const m = APP.mesas.find(m => m.id === p.mesaId);
-        if (m) {
-          m.status = 'livre'; m.horaAbertura = null;
-          apiFetch(`/api/mesas/${p.mesaId}/`, { method: 'PUT', body: JSON.stringify({ status: 'livre', abertura: null }) });
-        }
+        mesaDoP.status = 'livre'; mesaDoP.horaAbertura = null;
+        apiFetch(`/api/mesas/${mesaDoP.id}/`, { method: 'PUT', body: JSON.stringify({ status: 'livre', abertura: null }) });
       }
     }
 
