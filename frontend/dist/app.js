@@ -105,6 +105,7 @@ function navigate(page) {
             return;
     }
     APP.currentPage = page;
+    localStorage.setItem('currentPage', page);
     document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.toggle('active', el.dataset.page === page);
     });
@@ -1593,6 +1594,7 @@ async function fazerLogout() {
     APP.auth.usuario = null;
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUsuario');
+    localStorage.removeItem('currentPage');
     mostrarLogin();
 }
 function abrirTrocarSenha(primeiroAcesso = false) {
@@ -1780,7 +1782,8 @@ setInterval(() => {
         ln.textContent = APP.config.nome;
     await verificarAuth();
     if (APP.auth.usuario && !APP.auth.usuario.deveTrocarSenha) {
-        navigate('dashboard');
+        const paginaSalva = localStorage.getItem('currentPage') || 'dashboard';
+        navigate(paginaSalva);
         await carregarDados();
         render();
     }

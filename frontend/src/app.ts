@@ -101,6 +101,7 @@ function navigate(page: string): void {
     if (!(paginasPorPapel[papel] || []).includes(page)) return;
   }
   APP.currentPage = page;
+  localStorage.setItem('currentPage', page);
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', (el as HTMLElement).dataset.page === page);
   });
@@ -1429,6 +1430,7 @@ async function fazerLogout(): Promise<void> {
   APP.auth.usuario = null;
   localStorage.removeItem('authToken');
   localStorage.removeItem('authUsuario');
+  localStorage.removeItem('currentPage');
   mostrarLogin();
 }
 function abrirTrocarSenha(primeiroAcesso: boolean = false): void {
@@ -1580,7 +1582,8 @@ setInterval((): void => {
   if (ln) ln.textContent = APP.config.nome;
   await verificarAuth();
   if (APP.auth.usuario && !APP.auth.usuario.deveTrocarSenha) {
-    navigate('dashboard');
+    const paginaSalva = localStorage.getItem('currentPage') || 'dashboard';
+    navigate(paginaSalva);
     await carregarDados();
     render();
   }
