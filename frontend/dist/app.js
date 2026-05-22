@@ -1573,8 +1573,9 @@ async function fazerLogin() {
             return;
         }
         mostrarApp();
-        await carregarDados();
         navigate('dashboard');
+        await carregarDados();
+        render();
     }
     catch (e) {
         erroEl.textContent = 'Sem conexão com o servidor. Verifique se o Django está rodando em http://127.0.0.1:8000';
@@ -1779,8 +1780,9 @@ setInterval(() => {
         ln.textContent = APP.config.nome;
     await verificarAuth();
     if (APP.auth.usuario && !APP.auth.usuario.deveTrocarSenha) {
-        await carregarDados();
         navigate('dashboard');
+        await carregarDados();
+        render();
     }
 })();
 //# sourceMappingURL=app.js.map

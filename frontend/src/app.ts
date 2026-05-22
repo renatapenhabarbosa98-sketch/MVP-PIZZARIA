@@ -1412,8 +1412,9 @@ async function fazerLogin(): Promise<void> {
     (document.getElementById('loginPass') as HTMLInputElement).value = '';
     if (data.usuario.deveTrocarSenha) { mostrarApp(); abrirTrocarSenha(true); return; }
     mostrarApp();
-    await carregarDados();
     navigate('dashboard');
+    await carregarDados();
+    render();
   } catch (e) {
     erroEl.textContent = 'Sem conexão com o servidor. Verifique se o Django está rodando em http://127.0.0.1:8000'; erroEl.style.display = 'block';
   } finally {
@@ -1575,7 +1576,8 @@ setInterval((): void => {
   if (ln) ln.textContent = APP.config.nome;
   await verificarAuth();
   if (APP.auth.usuario && !APP.auth.usuario.deveTrocarSenha) {
-    await carregarDados();
     navigate('dashboard');
+    await carregarDados();
+    render();
   }
 })();
