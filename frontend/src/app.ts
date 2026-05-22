@@ -1154,17 +1154,32 @@ async function salvarConfig(): Promise<void> {
 ══════════════════════════════════════════════════════ */
 function openModalPedido(): void {
   APP.pedidoTemp = { items: [], mesaId: null };
+  _tamSelecionado = '';
+  document.querySelectorAll('.tam-btn').forEach(b => {
+    b.classList.toggle('active', (b as HTMLElement).dataset.tam === '');
+  });
   const sel = document.getElementById('pedMesa') as HTMLSelectElement;
   const livres = APP.mesas.filter(m => m.status !== 'ocupada');
   sel.innerHTML = livres.map(m => `<option value="${m.id}">Mesa ${m.numero} (${statusLabel(m.status)})</option>`).join('');
   renderPedidoItems(); populatePedidoItem();
   openModal('modalPedido');
 }
+let _tamSelecionado = '';
+function selecionarTamanho(btn: HTMLElement, tam: string): void {
+  _tamSelecionado = tam;
+  document.querySelectorAll('.tam-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  populatePedidoItem();
+}
 function populatePedidoItem(): void {
-  const sel   = document.getElementById('pedItem') as HTMLSelectElement;
-  const ativos = APP.cardapio.filter(i => i.ativo);
+  const sel = document.getElementById('pedItem') as HTMLSelectElement;
+  const ativos = APP.cardapio.filter(i => {
+    if (!i.ativo) return false;
+    if (_tamSelecionado) return i.tamanho === _tamSelecionado;
+    return true;
+  });
   sel.innerHTML = ativos.map(i =>
-    `<option value="${i.id}">${i.nome} ${i.tamanho ? `(${i.tamanho})` : ''} — ${money(i.preco)}</option>`
+    `<option value="${i.id}">${i.nome}${i.tamanho ? ` (${i.tamanho})` : ''} — ${money(i.preco)}</option>`
   ).join('');
 }
 function addItemPedido(): void {
