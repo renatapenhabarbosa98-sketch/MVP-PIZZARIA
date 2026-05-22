@@ -53,7 +53,7 @@ function loadStorage() {
         APP.config.fonteTamanho = Number(APP.config.fonteTamanho || 14);
         if (d.cardapio)
             APP.cardapio = d.cardapio;
-        if (d.mesas)
+        if (d.mesas && d.mesas.length > 0)
             APP.mesas = d.mesas;
         if (d.pedidos)
             APP.pedidos = d.pedidos;
@@ -328,8 +328,11 @@ async function carregarDados() {
         ]);
         if (cardapioR.ok)
             APP.cardapio = (await cardapioR.json()).map(normalizeCardapioItem);
-        if (mesasR.ok)
-            APP.mesas = await mesasR.json();
+        if (mesasR.ok) {
+            const m = await mesasR.json();
+            if (m.length > 0)
+                APP.mesas = m;
+        }
         if (pedidosR.ok)
             APP.pedidos = await pedidosR.json();
         if (clientesR.ok)
@@ -539,11 +542,17 @@ async function recarregarMesas() {
     try {
         const resp = await apiFetch('/api/mesas/');
         if (resp.ok) {
-            APP.mesas = await resp.json();
-            saveStorage();
+            const data = await resp.json();
+            if (data.length > 0) {
+                APP.mesas = data;
+                saveStorage();
+                return;
+            }
         }
     }
     catch { }
+    if (APP.mesas.length === 0)
+        initMesas();
 }
 /* ── PEDIDOS ──────────────────────────────────────── */
 function pedidos() {

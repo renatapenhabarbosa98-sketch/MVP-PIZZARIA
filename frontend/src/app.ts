@@ -53,9 +53,9 @@ function loadStorage(): void {
     APP.config.numMesas = APP.config.numMesas || APP.config.mesas || 10;
     APP.config.tema = APP.config.tema || (localStorage.getItem('theme') as Tema) || 'light';
     APP.config.fonteTamanho = Number(APP.config.fonteTamanho || 14);
-    if (d.cardapio)   APP.cardapio   = d.cardapio;
-    if (d.mesas)      APP.mesas      = d.mesas;
-    if (d.pedidos)    APP.pedidos    = d.pedidos;
+    if (d.cardapio)                    APP.cardapio = d.cardapio;
+    if (d.mesas && d.mesas.length > 0) APP.mesas    = d.mesas;
+    if (d.pedidos)                     APP.pedidos  = d.pedidos;
     if (d.clientes)   APP.clientes   = d.clientes;
     if (d.pagamentos) APP.pagamentos = d.pagamentos;
     if (d.nextId)     APP.nextId     = d.nextId;
@@ -319,7 +319,7 @@ async function carregarDados(): Promise<void> {
       apiFetch('/api/pagamentos/'),
     ]);
     if (cardapioR.ok) APP.cardapio = (await cardapioR.json() as ApiCardapioItem[]).map(normalizeCardapioItem);
-    if (mesasR.ok)    APP.mesas      = await mesasR.json();
+    if (mesasR.ok) { const m = await mesasR.json(); if (m.length > 0) APP.mesas = m; }
     if (pedidosR.ok)  APP.pedidos    = await pedidosR.json();
     if (clientesR.ok) APP.clientes   = await clientesR.json();
     if (pagamentosR.ok) APP.pagamentos = await pagamentosR.json();
@@ -517,10 +517,15 @@ async function recarregarMesas(): Promise<void> {
   try {
     const resp = await apiFetch('/api/mesas/');
     if (resp.ok) {
-      APP.mesas = await resp.json();
-      saveStorage();
+      const data = await resp.json();
+      if (data.length > 0) {
+        APP.mesas = data;
+        saveStorage();
+        return;
+      }
     }
   } catch {}
+  if (APP.mesas.length === 0) initMesas();
 }
 
 /* ── PEDIDOS ──────────────────────────────────────── */
