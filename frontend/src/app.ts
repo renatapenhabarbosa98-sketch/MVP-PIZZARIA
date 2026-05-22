@@ -197,15 +197,13 @@ function statusBadge(s: StatusMesa): string {
 }
 function pedStatusLabel(s: string): string {
   const map: Record<string, string> = {
-    'Em preparo': 'Em preparo', 'Saiu para entrega': 'Saiu p/ entrega',
-    'Servido': 'Servido', 'Finalizado': 'Finalizado',
+    'Em preparo': 'Em preparo', 'Servido': 'Servido', 'Finalizado': 'Finalizado',
   };
   return map[s] || s;
 }
 function pedStatusBadge(s: string): string {
   const map: Record<string, string> = {
-    'Em preparo': 'badge-amber', 'Saiu para entrega': 'badge-blue',
-    'Servido': 'badge-blue', 'Finalizado': 'badge-green',
+    'Em preparo': 'badge-amber', 'Servido': 'badge-blue', 'Finalizado': 'badge-green',
   };
   return map[s] || 'badge-gray';
 }
@@ -579,7 +577,7 @@ function setFilter(f: string): void { APP._pedFilter = f; render(); }
 async function avancarStatus(id: number): Promise<void> {
   const p = APP.pedidos.find(x => x.id === id);
   if (!p) return;
-  const seq = ['Em preparo', 'Saiu para entrega', 'Servido', 'Finalizado'];
+  const seq = ['Em preparo', 'Servido', 'Finalizado'];
   const idx = seq.indexOf(p.status);
   if (idx < seq.length - 1) {
     p.status = seq[idx + 1];
