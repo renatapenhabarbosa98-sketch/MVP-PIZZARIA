@@ -699,7 +699,7 @@ function switchCardTab(e: Event, tipo: string): void {
   (document.getElementById('tabPizza') as HTMLElement).style.display  = tipo === 'pizza'  ? 'block' : 'none';
   (document.getElementById('tabBebida') as HTMLElement).style.display = tipo === 'bebida' ? 'block' : 'none';
 }
-const PRECOS_TAMANHO: Record<string, number> = { P: 48.90, M: 58.90, G: 66.90, GG: 66.90 };
+const PRECOS_TAMANHO: Record<string, number> = { P: 48.90, M: 58.90, G: 66.90, GG: 78.90 };
 function autoPrecoTamanho(): void {
   const tipo = (document.getElementById('itemTipo') as HTMLSelectElement).value;
   const tam  = (document.getElementById('itemTamanho') as HTMLSelectElement).value;
@@ -1162,46 +1162,92 @@ function openModalPedido(): void {
   const sel = document.getElementById('pedMesa') as HTMLSelectElement;
   const livres = APP.mesas.filter(m => m.status !== 'ocupada');
   sel.innerHTML = livres.map(m => `<option value="${m.id}">Mesa ${m.numero} (${statusLabel(m.status)})</option>`).join('');
-  renderPedidoItems(); populatePedidoItem();
+  _tamSelecionado = '';
+  renderPedidoItems(); populatePedidoSabor();
   openModal('modalPedido');
 }
-function selecionarTamanho(btn: HTMLElement, tam: string): void {
+
+function extrairSaborDoNome(nome: string): string {
+  const m = nome.match(/^(.+?) - (?:GG|G|M|P) \(/);
+  return m ? m[1].trim() : nome;
+}
+function extrairTamanhoDoNome(nome: string): string {
+  const m = nome.match(/ - (GG|G|M|P) \(/);
+  return m ? m[1] : '';
+}
+
+let _tamSelecionado = '';
+
+function populatePedidoSabor(): void {
+  const sel = document.getElementById('pedSabor') as HTMLSelectElement;
+  const pizzas  = APP.cardapio.filter(i => i.ativo && i.tipo === 'pizza');
+  const bebidas = APP.cardapio.filter(i => i.ativo && i.tipo === 'bebida');
+  const sabores = [...new Set(pizzas.map(i => extrairSaborDoNome(i.nome)))];
+  let html = '<option value="">-- Selecione --</option>';
+  if (sabores.length) {
+    html += '<optgroup label="🍕 Pizzas">';
+    sabores.forEach(s => { html += `<option value="pizza:${s}">${s}</option>`; });
+    html += '</optgroup>';
+  }
+  if (bebidas.length) {
+    html += '<optgroup label="🥤 Bebidas">';
+    bebidas.forEach(b => { html += `<option value="bebida:${b.id}">${b.nome} — ${money(b.preco)}</option>`; });
+    html += '</optgroup>';
+  }
+  sel.innerHTML = html;
+  atualizarTamanhosBySabor();
+}
+
+function atualizarTamanhosBySabor(): void {
+  const val = (document.getElementById('pedSabor') as HTMLSelectElement).value;
+  const grupo = document.getElementById('pedTamanhoGroup') as HTMLElement;
+  const precoEl = document.getElementById('pedPrecoTamanho') as HTMLElement;
+  _tamSelecionado = '';
   document.querySelectorAll('.tam-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const sel = document.getElementById('pedItem') as HTMLSelectElement;
-  const currentId = parseInt(sel.value);
-  const current = APP.cardapio.find(x => x.id === currentId);
-  if (tam && current && current.tipo === 'pizza') {
-    const mesmaPizzaNoTamanho = APP.cardapio.find(x =>
-      x.ativo && x.tipo === 'pizza' && x.nome === current.nome && x.tamanho === tam
-    );
-    if (mesmaPizzaNoTamanho) sel.value = String(mesmaPizzaNoTamanho.id);
+  if (val.startsWith('pizza:')) {
+    const sabor = val.substring(6);
+    grupo.style.display = 'block';
+    document.querySelectorAll('.tam-btn').forEach(btn => {
+      const tam = (btn as HTMLElement).dataset.tam!;
+      const prod = APP.cardapio.find(i => i.ativo && extrairSaborDoNome(i.nome) === sabor && extrairTamanhoDoNome(i.nome) === tam);
+      (btn as HTMLElement).textContent = prod ? `${tam} — ${money(prod.preco)}` : tam;
+      (btn as HTMLButtonElement).disabled = !prod;
+    });
+    precoEl.textContent = '';
+  } else {
+    grupo.style.display = 'none';
+    precoEl.textContent = '';
   }
 }
-function destacarTamanhoDoPedidoItem(): void {
-  const sel = document.getElementById('pedItem') as HTMLSelectElement;
-  const itemId = parseInt(sel.value);
-  const item = APP.cardapio.find(x => x.id === itemId);
-  const tam = item?.tamanho || '';
-  document.querySelectorAll('.tam-btn').forEach(b => {
-    b.classList.toggle('active', (b as HTMLElement).dataset.tam === tam);
-  });
+
+function selecionarTamanho(btn: HTMLElement, tam: string): void {
+  if ((btn as HTMLButtonElement).disabled) return;
+  document.querySelectorAll('.tam-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _tamSelecionado = tam;
+  const sabor = (document.getElementById('pedSabor') as HTMLSelectElement).value.substring(6);
+  const prod = APP.cardapio.find(i => i.ativo && extrairSaborDoNome(i.nome) === sabor && extrairTamanhoDoNome(i.nome) === tam);
+  const precoEl = document.getElementById('pedPrecoTamanho') as HTMLElement;
+  precoEl.textContent = prod ? `Preço: ${money(prod.preco)}` : '';
 }
-function populatePedidoItem(): void {
-  const sel = document.getElementById('pedItem') as HTMLSelectElement;
-  const ativos = APP.cardapio.filter(i => i.ativo);
-  sel.innerHTML = ativos.map(i =>
-    `<option value="${i.id}">${i.nome}${i.tamanho ? ` (${i.tamanho})` : ''} — ${money(i.preco)}</option>`
-  ).join('');
-  destacarTamanhoDoPedidoItem();
-}
+
 function addItemPedido(): void {
-  const itemId = parseInt((document.getElementById('pedItem') as HTMLSelectElement).value);
-  const qtd    = parseInt((document.getElementById('pedQtd') as HTMLInputElement).value) || 1;
-  const obs    = (document.getElementById('pedObs') as HTMLInputElement).value.trim();
-  const item   = APP.cardapio.find(x => x.id === itemId);
+  const val = (document.getElementById('pedSabor') as HTMLSelectElement).value;
+  if (!val) { toast('Selecione um item', 'error'); return; }
+  const qtd = parseInt((document.getElementById('pedQtd') as HTMLInputElement).value) || 1;
+  const obs = (document.getElementById('pedObs') as HTMLInputElement).value.trim();
+  let item: ItemCardapio | undefined;
+  if (val.startsWith('pizza:')) {
+    if (!_tamSelecionado) { toast('Selecione o tamanho', 'error'); return; }
+    const sabor = val.substring(6);
+    item = APP.cardapio.find(i => i.ativo && extrairSaborDoNome(i.nome) === sabor && extrairTamanhoDoNome(i.nome) === _tamSelecionado);
+    if (!item) { toast('Tamanho não disponível para este sabor', 'error'); return; }
+  } else {
+    const id = parseInt(val.substring(7));
+    item = APP.cardapio.find(i => i.id === id && i.ativo);
+  }
   if (!item) return;
-  const existing = APP.pedidoTemp.items.find(i => i.id === itemId && i.obs === obs);
+  const existing = APP.pedidoTemp.items.find(i => i.id === item!.id && i.obs === obs);
   if (existing) { existing.qtd += qtd; }
   else { APP.pedidoTemp.items.push({ id: item.id, nome: item.nome, preco: item.preco, qtd, obs }); }
   (document.getElementById('pedObs') as HTMLInputElement).value = '';

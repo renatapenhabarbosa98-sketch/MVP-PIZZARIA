@@ -186,26 +186,25 @@
       <select class="form-control" id="pedMesa"></select>
     </div>
     <div class="form-group">
+      <label>Sabor</label>
+      <select class="form-control" id="pedSabor" onchange="atualizarTamanhosBySabor()"></select>
+    </div>
+    <div class="form-group" id="pedTamanhoGroup" style="display:none">
       <label>Tamanho</label>
       <div class="flex gap-2" style="flex-wrap:wrap">
-        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="" onclick="selecionarTamanho(this,'')">Todos</button>
-        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="P" onclick="selecionarTamanho(this,'P')">P – 4 fatias · R$ 48,90</button>
-        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="M" onclick="selecionarTamanho(this,'M')">M – 6 fatias · R$ 58,90</button>
-        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="G" onclick="selecionarTamanho(this,'G')">G – 8 fatias · R$ 66,90</button>
-        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="GG" onclick="selecionarTamanho(this,'GG')">GG – 12 fatias · R$ 66,90</button>
+        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="P" onclick="selecionarTamanho(this,'P')">P</button>
+        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="M" onclick="selecionarTamanho(this,'M')">M</button>
+        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="G" onclick="selecionarTamanho(this,'G')">G</button>
+        <button type="button" class="btn btn-secondary btn-sm tam-btn" data-tam="GG" onclick="selecionarTamanho(this,'GG')">GG</button>
       </div>
+      <div id="pedPrecoTamanho" class="text-muted text-sm" style="margin-top:6px"></div>
     </div>
     <div class="form-group">
-      <label>Adicionar Item</label>
       <div class="flex gap-2">
-        <select class="form-control" id="pedItem" onchange="destacarTamanhoDoPedidoItem()"></select>
         <input type="number" class="form-control" id="pedQtd" value="1" min="1" style="max-width:70px">
+        <input type="text" class="form-control" id="pedObs" placeholder="Observação (ex: sem cebola)">
         <button class="btn btn-secondary" onclick="addItemPedido()">+</button>
       </div>
-    </div>
-    <div class="form-group">
-      <label>Observação do item</label>
-      <input type="text" class="form-control" id="pedObs" placeholder="ex: sem cebola">
     </div>
     <div id="pedItensList"></div>
     <div class="total-row">
@@ -233,7 +232,7 @@
         <option value="P">P – Pequena · 4 fatias · R$ 48,90</option>
         <option value="M">M – Média · 6 fatias · R$ 58,90</option>
         <option value="G">G – Grande · 8 fatias · R$ 66,90</option>
-        <option value="GG">GG – Família · 12 fatias · R$ 66,90</option>
+        <option value="GG">GG – Família · 12 fatias · R$ 78,90</option>
       </select></div>
     </div>
     <div class="form-group"><label>Preço (R$)</label><input class="form-control" id="itemPreco" type="number" step="0.01" placeholder="0,00"></div>
