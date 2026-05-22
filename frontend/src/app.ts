@@ -1363,19 +1363,33 @@ function aplicarUsuarioLogado(usuario: Usuario): void {
 }
 async function verificarAuth(): Promise<void> {
   if (!APP.auth.token) { mostrarLogin(); return; }
+  const cached = localStorage.getItem('authUsuario');
+  if (cached) {
+    try {
+      const u: Usuario = JSON.parse(cached);
+      aplicarUsuarioLogado(u);
+      if (!u.deveTrocarSenha) mostrarApp();
+    } catch {}
+  }
   try {
     const resp = await apiFetch('/api/auth/me/');
     if (resp.ok) {
       const usuario: Usuario = await resp.json();
+      localStorage.setItem('authUsuario', JSON.stringify(usuario));
       aplicarUsuarioLogado(usuario);
       if (usuario.deveTrocarSenha) { abrirTrocarSenha(true); mostrarApp(); return; }
       mostrarApp();
     } else {
       APP.auth.token = null;
+      APP.auth.usuario = null;
       localStorage.removeItem('authToken');
+      localStorage.removeItem('authUsuario');
       mostrarLogin();
     }
-  } catch (e) { mostrarLogin(); }
+  } catch (e) {
+    if (APP.auth.usuario) mostrarApp();
+    else mostrarLogin();
+  }
 }
 async function fazerLogin(): Promise<void> {
   const username = (document.getElementById('loginUser') as HTMLInputElement).value.trim();
@@ -1395,6 +1409,7 @@ async function fazerLogin(): Promise<void> {
     if (!resp.ok) { erroEl.textContent = data.erro || 'Erro ao entrar'; erroEl.style.display = 'block'; return; }
     APP.auth.token = data.token;
     localStorage.setItem('authToken', data.token);
+    localStorage.setItem('authUsuario', JSON.stringify(data.usuario));
     aplicarUsuarioLogado(data.usuario);
     (document.getElementById('loginPass') as HTMLInputElement).value = '';
     if (data.usuario.deveTrocarSenha) { mostrarApp(); abrirTrocarSenha(true); return; }
@@ -1413,6 +1428,7 @@ async function fazerLogout(): Promise<void> {
   APP.auth.token = null;
   APP.auth.usuario = null;
   localStorage.removeItem('authToken');
+  localStorage.removeItem('authUsuario');
   mostrarLogin();
 }
 function abrirTrocarSenha(primeiroAcesso: boolean = false): void {
@@ -1442,6 +1458,7 @@ async function trocarSenha(): Promise<void> {
     if (!resp.ok) { toast(data.erro || 'Erro ao trocar senha', 'error'); return; }
     APP.auth.token = data.token;
     localStorage.setItem('authToken', data.token);
+    localStorage.setItem('authUsuario', JSON.stringify(data.usuario));
     aplicarUsuarioLogado(data.usuario);
     closeModal('modalTrocarSenha');
     toast('Senha alterada com sucesso!', 'success');

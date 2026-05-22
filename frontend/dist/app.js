@@ -1497,10 +1497,21 @@ async function verificarAuth() {
         mostrarLogin();
         return;
     }
+    const cached = localStorage.getItem('authUsuario');
+    if (cached) {
+        try {
+            const u = JSON.parse(cached);
+            aplicarUsuarioLogado(u);
+            if (!u.deveTrocarSenha)
+                mostrarApp();
+        }
+        catch { }
+    }
     try {
         const resp = await apiFetch('/api/auth/me/');
         if (resp.ok) {
             const usuario = await resp.json();
+            localStorage.setItem('authUsuario', JSON.stringify(usuario));
             aplicarUsuarioLogado(usuario);
             if (usuario.deveTrocarSenha) {
                 abrirTrocarSenha(true);
@@ -1511,12 +1522,17 @@ async function verificarAuth() {
         }
         else {
             APP.auth.token = null;
+            APP.auth.usuario = null;
             localStorage.removeItem('authToken');
+            localStorage.removeItem('authUsuario');
             mostrarLogin();
         }
     }
     catch (e) {
-        mostrarLogin();
+        if (APP.auth.usuario)
+            mostrarApp();
+        else
+            mostrarLogin();
     }
 }
 async function fazerLogin() {
@@ -1546,6 +1562,7 @@ async function fazerLogin() {
         }
         APP.auth.token = data.token;
         localStorage.setItem('authToken', data.token);
+        localStorage.setItem('authUsuario', JSON.stringify(data.usuario));
         aplicarUsuarioLogado(data.usuario);
         document.getElementById('loginPass').value = '';
         if (data.usuario.deveTrocarSenha) {
@@ -1575,6 +1592,7 @@ async function fazerLogout() {
     APP.auth.token = null;
     APP.auth.usuario = null;
     localStorage.removeItem('authToken');
+    localStorage.removeItem('authUsuario');
     mostrarLogin();
 }
 function abrirTrocarSenha(primeiroAcesso = false) {
@@ -1614,6 +1632,7 @@ async function trocarSenha() {
         }
         APP.auth.token = data.token;
         localStorage.setItem('authToken', data.token);
+        localStorage.setItem('authUsuario', JSON.stringify(data.usuario));
         aplicarUsuarioLogado(data.usuario);
         closeModal('modalTrocarSenha');
         toast('Senha alterada com sucesso!', 'success');
