@@ -18,7 +18,6 @@ package-lock.json
 *.map
 
 # ── IDE / Sistema ───────────────────────────────────
-.claude/
 .vscode/
 .idea/
 pyrightconfig.json
