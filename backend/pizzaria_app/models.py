@@ -23,6 +23,8 @@ class Produto(models.Model):
             tipo = 'pizza'
         elif self.categoria_id == 2:
             tipo = 'bebida'
+        elif self.categoria_id == 3:
+            tipo = 'outros'
         else:
             cat = (self.categoria or '').lower()
             tipo = 'bebida' if 'bebida' in cat or 'drink' in cat else 'pizza'

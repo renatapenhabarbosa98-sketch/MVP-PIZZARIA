@@ -34,7 +34,7 @@ interface Usuario {
 interface ItemCardapio {
   id: number;
   nome: string;
-  tipo: 'pizza' | 'bebida';
+  tipo: 'pizza' | 'bebida' | 'outros';
   tamanho: string;
   preco: number;
   ativo: boolean;

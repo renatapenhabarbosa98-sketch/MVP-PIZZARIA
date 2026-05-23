@@ -57,7 +57,7 @@ def api_cardapio(request: HttpRequest):
             nome=d['nome'],
             descricao=d.get('descricao', ''),
             preco=d['preco'],
-            categoria_id=1 if tipo == 'pizza' else 2,
+            categoria_id=1 if tipo == 'pizza' else (2 if tipo == 'bebida' else 3),
             ativo=d.get('ativo', True),
             tamanho=d.get('tam', d.get('tamanho', '')),
         )
@@ -78,7 +78,8 @@ def api_cardapio_detail(request: HttpRequest, pk: int):
         d = json.loads(request.body)
         item.nome = d.get('nome', item.nome)
         if 'tipo' in d:
-            item.categoria_id = 1 if d.get('tipo') == 'pizza' else 2
+            t = d.get('tipo')
+            item.categoria_id = 1 if t == 'pizza' else (2 if t == 'bebida' else 3)
         item.descricao = d.get('descricao', item.descricao)
         item.preco = d.get('preco', item.preco)
         item.ativo = d.get('ativo', item.ativo)

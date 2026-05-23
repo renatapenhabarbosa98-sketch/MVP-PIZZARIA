@@ -683,10 +683,35 @@ function toggleKdsItem(pedId, idx) {
 }
 function avancarStatusKds(id) { avancarStatus(id); }
 /* ── CARDÁPIO ─────────────────────────────────────── */
+const TIPO_INFO = {
+    pizza: { label: 'Pizzas', temTamanho: true },
+    bebida: { label: 'Bebidas', temTamanho: false },
+    outros: { label: 'Outros', temTamanho: false },
+};
+const TIPOS_ORDEM = ['pizza', 'bebida', 'outros'];
 function cardapio() {
     const isAdmin = APP.auth.usuario?.papel === 'admin';
-    const pizzas = APP.cardapio.filter(i => i.tipo === 'pizza');
-    const bebidas = APP.cardapio.filter(i => i.tipo === 'bebida');
+    const tiposPresentes = TIPOS_ORDEM.filter(t => APP.cardapio.some(i => i.tipo === t));
+    if (tiposPresentes.length === 0)
+        tiposPresentes.push('pizza');
+    const renderTabela = (tipo) => {
+        const items = APP.cardapio.filter(i => i.tipo === tipo);
+        const info = TIPO_INFO[tipo] || { label: tipo, temTamanho: false };
+        return `<div class="table-wrap"><table>
+      <thead><tr><th>Nome</th>${info.temTamanho ? '<th>Tamanho</th>' : ''}<th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
+      <tbody>${items.map(i => `
+        <tr>
+          <td><strong>${i.nome}</strong></td>
+          ${info.temTamanho ? `<td>${i.tamanho || '-'}</td>` : ''}
+          <td>${money(i.preco)}</td>
+          <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
+          ${isAdmin ? `<td><div class="flex gap-2">
+            <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
+            <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
+          </div></td>` : ''}
+        </tr>`).join('')}</tbody>
+    </table></div>`;
+    };
     return `
   <div class="card">
     <div class="card-header">
@@ -694,43 +719,19 @@ function cardapio() {
       ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="openModalItem()">+ Novo Item</button>` : ''}
     </div>
     <div class="tabs">
-      <div class="tab active" onclick="switchCardTab(event,'pizza')">Pizzas</div>
-      <div class="tab" onclick="switchCardTab(event,'bebida')">Bebidas</div>
+      ${tiposPresentes.map((t, idx) => `<div class="tab ${idx === 0 ? 'active' : ''}" onclick="switchCardTab(event,'${t}')">${TIPO_INFO[t]?.label || t}</div>`).join('')}
     </div>
-    <div id="tabPizza"><div class="table-wrap"><table>
-      <thead><tr><th>Nome</th><th>Tamanho</th><th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
-      <tbody>${pizzas.map(i => `
-        <tr>
-          <td><strong>${i.nome}</strong></td>
-          <td>${i.tamanho || '-'}</td>
-          <td>${money(i.preco)}</td>
-          <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          ${isAdmin ? `<td><div class="flex gap-2">
-            <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
-            <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
-          </div></td>` : ''}
-        </tr>`).join('')}</tbody>
-    </table></div></div>
-    <div id="tabBebida" style="display:none"><div class="table-wrap"><table>
-      <thead><tr><th>Nome</th><th>Preço</th><th>Status</th>${isAdmin ? '<th>Ações</th>' : ''}</tr></thead>
-      <tbody>${bebidas.map(i => `
-        <tr>
-          <td><strong>${i.nome}</strong></td>
-          <td>${money(i.preco)}</td>
-          <td><span class="badge ${i.ativo ? 'badge-green' : 'badge-gray'}">${i.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          ${isAdmin ? `<td><div class="flex gap-2">
-            <button class="btn btn-sm btn-secondary" onclick="editItem(${i.id})">Editar</button>
-            <button class="btn btn-sm btn-${i.ativo ? 'danger' : 'success'}" onclick="toggleItem(${i.id})">${i.ativo ? 'Desativar' : 'Ativar'}</button>
-          </div></td>` : ''}
-        </tr>`).join('')}</tbody>
-    </table></div></div>
+    ${tiposPresentes.map((t, idx) => `<div id="cardTab_${t}" ${idx > 0 ? 'style="display:none"' : ''}>${renderTabela(t)}</div>`).join('')}
   </div>`;
 }
 function switchCardTab(e, tipo) {
     document.querySelectorAll('#content .tab').forEach(t => t.classList.remove('active'));
     e.target.classList.add('active');
-    document.getElementById('tabPizza').style.display = tipo === 'pizza' ? 'block' : 'none';
-    document.getElementById('tabBebida').style.display = tipo === 'bebida' ? 'block' : 'none';
+    TIPOS_ORDEM.forEach(t => {
+        const el = document.getElementById(`cardTab_${t}`);
+        if (el)
+            el.style.display = t === tipo ? 'block' : 'none';
+    });
 }
 const PRECOS_TAMANHO = { P: 48.90, M: 58.90, G: 66.90, GG: 78.90 };
 function autoPrecoTamanho() {
@@ -1289,6 +1290,7 @@ function populatePedidoSabor() {
     const sel = document.getElementById('pedSabor');
     const pizzas = APP.cardapio.filter(i => i.ativo && i.tipo === 'pizza');
     const bebidas = APP.cardapio.filter(i => i.ativo && i.tipo === 'bebida');
+    const outros = APP.cardapio.filter(i => i.ativo && i.tipo === 'outros');
     const sabores = [...new Set(pizzas.map(i => extrairSaborDoNome(i.nome)))];
     let html = '<option value="">-- Selecione --</option>';
     if (sabores.length) {
@@ -1299,6 +1301,11 @@ function populatePedidoSabor() {
     if (bebidas.length) {
         html += '<optgroup label="🥤 Bebidas">';
         bebidas.forEach(b => { html += `<option value="bebida:${b.id}">${b.nome} — ${money(b.preco)}</option>`; });
+        html += '</optgroup>';
+    }
+    if (outros.length) {
+        html += '<optgroup label="🍮 Outros">';
+        outros.forEach(o => { html += `<option value="outros:${o.id}">${o.nome} — ${money(o.preco)}</option>`; });
         html += '</optgroup>';
     }
     sel.innerHTML = html;
@@ -1319,6 +1326,11 @@ function atualizarTamanhosBySabor() {
     const precoEl = document.getElementById('pedPrecoTamanho');
     _tamSelecionado = '';
     document.querySelectorAll('.tam-btn').forEach(b => { b.classList.remove('active'); b.disabled = false; });
+    if (!val.startsWith('pizza:')) {
+        grupo.style.display = 'none';
+        precoEl.textContent = '';
+        return;
+    }
     if (val.startsWith('pizza:')) {
         const sabor = val.substring(6);
         grupo.style.display = 'block';
@@ -1327,10 +1339,6 @@ function atualizarTamanhosBySabor() {
             const preco = precoDeTamanho(sabor, tam);
             btn.textContent = preco ? `${tam} — ${money(preco)}` : tam;
         });
-        precoEl.textContent = '';
-    }
-    else {
-        grupo.style.display = 'none';
         precoEl.textContent = '';
     }
 }
@@ -1375,7 +1383,7 @@ function addItemPedido() {
         }
     }
     else {
-        const id = parseInt(val.substring(7));
+        const id = parseInt(val.startsWith('bebida:') ? val.substring(7) : val.substring(7));
         item = APP.cardapio.find(i => i.id === id && i.ativo);
         if (!item)
             return;
