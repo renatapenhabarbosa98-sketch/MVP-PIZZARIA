@@ -1102,7 +1102,46 @@ function caixa() {
             </tr>`).join('')}
           </tbody>
         </table></div>`}
+  </div>
+  ${pgHoje.length > 0 ? (() => {
+        const idsHoje = new Set(pgHoje.map(pg => pg.pedidoId));
+        const pedidosHoje = APP.pedidos.filter(p => idsHoje.has(p.id));
+        const resumo = {};
+        pedidosHoje.forEach(p => {
+            p.items.forEach(i => {
+                if (!resumo[i.nome])
+                    resumo[i.nome] = { qtd: 0, total: 0 };
+                resumo[i.nome].qtd += i.qtd;
+                resumo[i.nome].total += i.preco * i.qtd;
+            });
+        });
+        const linhas = Object.entries(resumo).sort((a, b) => b[1].qtd - a[1].qtd);
+        if (linhas.length === 0)
+            return '';
+        return `
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">
+      <div class="card-title">Resumo de Itens Consumidos</div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Item</th><th>Qtd</th><th>Total</th></tr></thead>
+      <tbody>${linhas.map(([nome, d]) => `
+        <tr>
+          <td><strong>${escapeHtml(nome)}</strong></td>
+          <td><span class="badge badge-blue">${d.qtd}</span></td>
+          <td><strong>${money(d.total)}</strong></td>
+        </tr>`).join('')}
+      </tbody>
+      <tfoot>
+        <tr style="border-top:2px solid var(--border)">
+          <td><strong>Total de itens</strong></td>
+          <td><strong>${linhas.reduce((s, [, d]) => s + d.qtd, 0)}</strong></td>
+          <td><strong style="color:var(--green)">${money(linhas.reduce((s, [, d]) => s + d.total, 0))}</strong></td>
+        </tr>
+      </tfoot>
+    </table></div>
   </div>`;
+    })() : ''}`;
 }
 /* ── CONFIG ───────────────────────────────────────── */
 function config() {
